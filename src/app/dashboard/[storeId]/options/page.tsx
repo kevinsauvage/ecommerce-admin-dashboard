@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
-const BASE_URL = process.env.VERCEL_URL;
+const BASE_URL = process.env.NEXT_BASE_URL;
 
 const getData = async (
   storeId: string,
