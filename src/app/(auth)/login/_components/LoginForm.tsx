@@ -38,7 +38,7 @@ export default function LoginForm() {
         description: state.error,
       });
     }
-  }, [state.error, toast]);
+  }, [state?.error, toast]);
 
   return (
     <Card className="mx-auto max-w-sm">

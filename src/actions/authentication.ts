@@ -50,36 +50,37 @@ const loginSchema = z.object({
 });
 
 export async function login(previousState: unknown, formData: FormData) {
-  try {
-    const data = Object.fromEntries(formData.entries());
-    const result = loginSchema.safeParse(data);
+  const data = Object.fromEntries(formData.entries());
+  const result = loginSchema.safeParse(data);
 
-    if (!result.success) return result.error.formErrors.fieldErrors;
+  if (!result.success) return result.error.formErrors.fieldErrors;
 
-    const { email, password } = result.data || {};
+  const { email, password } = result.data || {};
 
-    const user = await db.user.findUnique({ where: { email } });
+  const user = await db.user.findUnique({ where: { email } });
 
-    if (!user) return { email: 'Email is not registered' };
+  if (!user) return { email: 'Email is not registered' };
 
-    const hashedPassword = await hashPassword(password);
+  const hashedPassword = await hashPassword(password);
 
-    if (hashedPassword !== user.password) return { password: 'Wrong password' };
+  if (hashedPassword !== user.password) return { password: 'Wrong password' };
 
-    const expires = new Date(Date.now() + Number(expiresIn));
+  const expires = new Date(Date.now() + Number(expiresIn));
 
-    const session = await encrypt({
-      expires,
-      user: { id: user.id, email, role: user.role },
-    });
+  const session = await encrypt({
+    expires,
+    user: { id: user.id, email, role: user.role },
+  });
 
-    cookies().set('session', session, { expires, httpOnly: true });
-  } catch (error) {
-    console.error('loginAction Error:', error);
-    return { error: 'Something went wrong, please try again' };
+  cookies().set('session', session, { expires, httpOnly: true });
+
+  const store = await db.store.findFirst({ where: { userId: user.id } });
+
+  if (store) {
+    redirect(`/dashboard/${store.id}`);
+  } else {
+    redirect('/setup');
   }
-
-  redirect('/dashboard');
 }
 
 export async function logout() {

@@ -22,7 +22,7 @@ export default function StoreForm() {
     <Card>
       <CardContent>
         <form action={action}>
-          <div className="space-y-2 mb-8">
+          <div className="space-y-2 mb-4 mt-4">
             <Label htmlFor="name">Name</Label>
             <Input
               type="text"
