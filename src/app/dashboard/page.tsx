@@ -11,9 +11,5 @@ export default async function DashboardPage() {
 
   const store = await db.store.findFirst({ where: { userId } });
 
-  if (!store) {
-    return redirect('/setup');
-  } else {
-    return redirect(`/dashboard/${store.id}`);
-  }
+  return store ? redirect(`/dashboard/${store.id}`) : redirect('/setup');
 }
