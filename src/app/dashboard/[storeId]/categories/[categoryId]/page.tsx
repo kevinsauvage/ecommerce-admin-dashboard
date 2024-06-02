@@ -3,6 +3,7 @@ import { Category } from '@prisma/client';
 import CategoriesTable from '../_components/CategoriesTable';
 import BreadcrumbNav from '@/components/BreadcrumbNav';
 import Heading from '@/components/Heading';
+import { Card, CardContent } from '@/components/ui/card';
 import db from '@/db/db';
 
 const getCategoryBreadcrumb = (category: Category) => {
@@ -61,23 +62,27 @@ export default async function CategoriesPage({
     <>
       <Heading title={`Category (${category?.name})`} />
       <BreadcrumbNav items={getCategoryBreadcrumb(category as Category)} />
-      <CategoriesTable
-        categories={
-          category?.childCategories as Array<
-            Category & {
-              childCategories: Array<
+      <Card>
+        <CardContent className="p-0">
+          <CategoriesTable
+            categories={
+              category?.childCategories as Array<
                 Category & {
                   childCategories: Array<
                     Category & {
-                      childCategories: Array<Category>;
+                      childCategories: Array<
+                        Category & {
+                          childCategories: Array<Category>;
+                        }
+                      >;
                     }
                   >;
                 }
-              >;
+              >
             }
-          >
-        }
-      />
+          />{' '}
+        </CardContent>
+      </Card>
     </>
   );
 }
