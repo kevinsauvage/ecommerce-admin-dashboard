@@ -31,13 +31,6 @@ export async function addStore(previousState: unknown, formData: FormData) {
     });
   } catch (error: unknown) {
     console.error(error);
-
-    if (
-      error instanceof PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    ) {
-      return { error: 'Store name already exists' };
-    }
     return { error: 'Error while trying to add the store' };
   }
 
@@ -103,12 +96,6 @@ export async function updateStore(
     };
   } catch (error) {
     console.error(error);
-    if (
-      error instanceof PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    ) {
-      return { name: 'Store name already exists' };
-    }
     return {
       error: true,
       message: 'Error while trying to update the store',

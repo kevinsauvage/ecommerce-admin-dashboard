@@ -13,7 +13,7 @@ datasource db {
 // The Store model represents a store entity with related information and relations to other models.
 model Store {
   id          String     @id @default(uuid()) // Primary key
-  name        String     @unique // Unique store name
+  name        String     
   description String     @default("")
   address     String     @default("")
   phone       String     @default("")

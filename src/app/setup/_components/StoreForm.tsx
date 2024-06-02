@@ -18,6 +18,8 @@ export default function StoreForm() {
     FormData
   >(addStore, {});
 
+  console.log('🟩🟪🟦-->  ~ StoreForm ~ error:', error);
+
   return (
     <Card>
       <CardContent>
@@ -32,7 +34,7 @@ export default function StoreForm() {
               placeholder="Store name"
               className="max-w-96 w-full"
             />
-            <FormErrorMessage message={error?.name || error.error} />
+            <FormErrorMessage message={error?.name || error?.error} />
           </div>
           <SubmitButton />
         </form>
