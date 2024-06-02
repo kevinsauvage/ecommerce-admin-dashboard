@@ -12,30 +12,7 @@ import Sorting from '@/components/Sorting';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-
-const BASE_URL = process.env.NEXT_BASE_URL;
-
-const getData = async (
-  storeId: string,
-  searchParams: {
-    page?: string;
-    query?: string;
-    sort?: string;
-  }
-) => {
-  const url = new URL(`${BASE_URL}/api/${storeId}/categories`);
-
-  const params = new URLSearchParams(searchParams);
-
-  params.set('pageSize', pageSize.toString());
-  params.set('withChildCategories', 'true');
-  params.set('onlyParentCategories', 'true');
-
-  url.search = params.toString();
-
-  const response = await fetch(url);
-  return await response.json();
-};
+import { getCategories } from '@/db/categories';
 
 export default async function CategoriesPage({
   params,
@@ -49,8 +26,16 @@ export default async function CategoriesPage({
   };
 }) {
   const { storeId } = params;
-  const { page, query } = searchParams;
-  const { categories, count } = await getData(storeId, searchParams);
+  const { page, query, sort } = searchParams;
+
+  const { categories, count } = await getCategories({
+    storeId,
+    page: Number(page ?? 1),
+    query,
+    sort,
+    onlyParentCategories: true,
+    pageSize,
+  });
 
   const categorySearchAction = async (payload: FormData) => {
     'use server';
@@ -96,7 +81,7 @@ export default async function CategoriesPage({
         {categories?.length > 0 ? (
           <>
             <Card>
-              <CardContent>
+              <CardContent className="p-0">
                 <CategoriesTable categories={categories} />
               </CardContent>
             </Card>

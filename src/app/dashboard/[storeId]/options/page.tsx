@@ -12,29 +12,7 @@ import Sorting from '@/components/Sorting';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-
-const BASE_URL = process.env.NEXT_BASE_URL;
-
-const getData = async (
-  storeId: string,
-  searchParams: {
-    filter?: string;
-    page?: string;
-    query?: string;
-    sort?: string;
-  }
-) => {
-  const url = new URL(`${BASE_URL}/api/${storeId}/options`);
-
-  const params = new URLSearchParams(searchParams);
-
-  params.set('pageSize', pageSize.toString());
-
-  url.search = params.toString();
-
-  const response = await fetch(url);
-  return await response.json();
-};
+import { getOptions } from '@/db/options';
 
 export default async function OptionsPage({
   params,
@@ -49,7 +27,14 @@ export default async function OptionsPage({
 }) {
   const { storeId } = params;
   const { page, query } = searchParams;
-  const { options, count } = await getData(storeId, searchParams);
+
+  const { options, count } = await getOptions({
+    storeId,
+    page: Number(searchParams.page ?? 1),
+    query: searchParams.query,
+    sort: searchParams.sort,
+    pageSize,
+  });
 
   const optionsSearchAction = async (payload: FormData) => {
     'use server';
@@ -94,7 +79,7 @@ export default async function OptionsPage({
         {options?.length > 0 ? (
           <>
             <Card>
-              <CardContent>
+              <CardContent className="p-0">
                 <OptionsTable options={options} />
               </CardContent>
             </Card>

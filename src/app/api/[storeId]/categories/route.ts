@@ -1,14 +1,6 @@
-import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
 
-import db from '@/db/db';
-
-const sortMap = new Map([
-  ['newest', { createdAt: Prisma.SortOrder.desc }],
-  ['oldest', { createdAt: Prisma.SortOrder.asc }],
-  ['name-asc', { name: Prisma.SortOrder.asc }],
-  ['name-desc', { name: Prisma.SortOrder.desc }],
-]);
+import { getCategories } from '@/db/categories';
 
 const getQueryParams = (searchParams: URLSearchParams) => {
   const page = Number(searchParams.get('page')) || 1;
@@ -37,46 +29,17 @@ export async function GET(
   try {
     const { storeId } = params || {};
     const { searchParams } = new URL(req.url);
-    const {
+    const { page, pageSize, query, sort, onlyParentCategories } =
+      getQueryParams(searchParams);
+
+    const { categories, count } = await getCategories({
+      storeId,
       page,
       pageSize,
       query,
       sort,
-      withChildCategories,
       onlyParentCategories,
-    } = getQueryParams(searchParams);
-
-    const [categories, count] = await Promise.all([
-      db.category.findMany({
-        where: {
-          storeId,
-          name: { contains: query, mode: Prisma.QueryMode.insensitive },
-          parentId: onlyParentCategories ? { equals: null } : { not: null },
-        },
-        include: {
-          childCategories: withChildCategories
-            ? {
-                include: {
-                  childCategories: {
-                    include: {
-                      childCategories: true,
-                    },
-                  },
-                },
-              }
-            : false,
-        },
-        skip: (Number(page) - 1) * pageSize,
-        take: pageSize,
-        orderBy: sortMap.get(sort),
-      }),
-      db.category.count({
-        where: {
-          storeId,
-          name: { contains: query },
-        },
-      }),
-    ]);
+    });
 
     return NextResponse.json({ categories, count });
   } catch (error) {

@@ -63,8 +63,11 @@ export default function ProductsFilters({
             <DropdownMenuCheckboxItem
               key={option.key}
               checked={selected.includes(option.key)}
+              asChild
             >
-              <Link href={getUrl(option.key)}>{option.label}</Link>
+              <Link href={getUrl(option.key)} className="w-full h-full">
+                {option.label}
+              </Link>
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuContent>

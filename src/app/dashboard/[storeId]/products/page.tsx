@@ -13,29 +13,7 @@ import Sorting from '@/components/Sorting';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-
-const BASE_URL = process.env.NEXT_BASE_URL;
-
-const getData = async (
-  storeId: string,
-  searchParams: {
-    filter?: string;
-    page?: string;
-    query?: string;
-    sort?: string;
-  }
-) => {
-  const url = new URL(`${BASE_URL}/api/${storeId}/products`);
-
-  const params = new URLSearchParams(searchParams);
-
-  params.set('pageSize', pageSize.toString());
-
-  url.search = params.toString();
-
-  const response = await fetch(url);
-  return await response.json();
-};
+import { getProducts } from '@/db/products';
 
 export default async function ProductsPage({
   params,
@@ -50,8 +28,17 @@ export default async function ProductsPage({
   };
 }) {
   const { storeId } = params;
-  const { filter, page, query } = searchParams;
-  const { products, count } = await getData(storeId, searchParams);
+  const { filter, page, query, sort } = searchParams;
+
+  const { products, count } = await getProducts({
+    storeId,
+    page: Number(page ?? 1),
+    query,
+    sort,
+    pageSize,
+    isArchived: filter?.includes('archived'),
+    isFeatured: filter?.includes('featured'),
+  });
 
   const productsSearchAction = async (payload: FormData) => {
     'use server';
@@ -103,7 +90,7 @@ export default async function ProductsPage({
         {products?.length > 0 ? (
           <>
             <Card>
-              <CardContent>
+              <CardContent className="p-0">
                 <ProductsTable
                   products={JSON.parse(JSON.stringify(products))}
                 />

@@ -43,6 +43,5 @@ export const sortOptions = [
 
 export const filterOptions = [
   { key: 'archived', label: 'Archived' },
-  { key: 'active', label: 'Active' },
   { key: 'featured', label: 'Featured' },
 ];

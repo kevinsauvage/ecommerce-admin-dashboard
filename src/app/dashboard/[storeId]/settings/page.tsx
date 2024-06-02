@@ -1,14 +1,8 @@
 import { redirect } from 'next/navigation';
 
 import StoreSettingsForm from './_components/SettingForm';
-import BreadcrumbNav from '@/components/BreadcrumbNav';
 import Heading from '@/components/Heading';
 import db from '@/db/db';
-
-const getBreadcrumbItems = (storeId: string) => [
-  { name: 'Dashboard', href: `/dashboard/${storeId}` },
-  { name: 'Store settings' },
-];
 
 export default async function settings({
   params,
@@ -22,7 +16,6 @@ export default async function settings({
   return (
     <>
       <Heading title="Settings" />
-      <BreadcrumbNav items={getBreadcrumbItems(storeId)} />
       <StoreSettingsForm store={store} />
     </>
   );

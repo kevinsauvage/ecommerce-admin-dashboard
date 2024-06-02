@@ -46,7 +46,9 @@ export default function Sorting({
         >
           {sortOptions.map((row) => (
             <DropdownMenuRadioItem key={row.key} value={row.key}>
-              <Link href={getUrl(row.key)}>{row.label}</Link>
+              <Link href={getUrl(row.key)} className="w-full h-full">
+                {row.label}
+              </Link>
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
