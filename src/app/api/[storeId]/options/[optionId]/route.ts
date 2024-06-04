@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import db from '@/db/db';
+import { getOption } from '@/db/options';
 
 export async function GET(
   req: Request,
@@ -9,12 +9,7 @@ export async function GET(
   try {
     const { storeId, optionId } = params || {};
 
-    const product = await db.product.findUnique({
-      where: {
-        id: optionId,
-        storeId,
-      },
-    });
+    const product = await getOption({ storeId, optionId });
 
     return NextResponse.json(product);
   } catch (error) {

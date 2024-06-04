@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import db from '@/db/db';
+import { getCategory } from '@/db/categories';
 
 export async function GET(
   req: Request,
@@ -9,8 +9,10 @@ export async function GET(
   try {
     const { storeId, categoryId } = params || {};
 
-    const category = await db.category.findUnique({
-      where: { id: categoryId, storeId },
+    const category = await getCategory({
+      storeId,
+      categoryId,
+      withChildCategories: true,
     });
 
     return NextResponse.json(category);

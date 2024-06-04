@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import db from '@/db/db';
+import { getProduct } from '@/db/products';
 
 export async function GET(
   req: Request,
@@ -11,20 +11,22 @@ export async function GET(
     const { searchParams } = new URL(req.url);
 
     const isFeatured = searchParams.get('isFeatured') === 'true';
+    const isArchived = searchParams.get('isArchived') === 'true';
     const withVariants = searchParams.get('withVariants') === 'true';
+    const withTags = searchParams.get('withTags') === 'true';
+    const withCategory = searchParams.get('withCategory') === 'true';
+    const withSeo = searchParams.get('withSeo') === 'true';
 
-    const product = await db.product.findUnique({
-      where: {
-        id: productId,
-        storeId,
-        isFeatured: isFeatured || undefined,
-      },
-      include: {
-        images: true,
-        category: true,
-        variants: withVariants,
-        tags: true,
-      },
+    const product = getProduct({
+      storeId,
+      productId,
+      isFeatured,
+      isArchived,
+      withImages: true,
+      withTags,
+      withCategory,
+      withSeo,
+      withVariants,
     });
 
     return NextResponse.json(product);

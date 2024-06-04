@@ -1,12 +1,19 @@
 import ProductForm from '../_components/ProductForm';
 import BreadcrumbNav from '@/components/BreadcrumbNav';
 import Heading from '@/components/Heading';
-import db from '@/db/db';
+import { getCategories } from '@/db/categories';
+import { getOptions } from '@/db/options';
 
 const getData = async (productId: string, storeId: string) => {
   return Promise.all([
-    db.category.findMany({ where: { storeId } }),
-    db.option.findMany({ where: { storeId }, include: { values: true } }),
+    getCategories({
+      storeId,
+      page: 1,
+      pageSize: 100,
+      withChildCategories: true,
+      onlyParentCategories: true,
+    }),
+    getOptions({ storeId, page: 1, pageSize: 100 }),
   ]);
 };
 
@@ -28,7 +35,10 @@ export default async function ProductEditPage({
     <>
       <BreadcrumbNav items={getBreadcrumbItems(storeId)} />
       <Heading title="Add Product" />
-      <ProductForm categories={categories} options={options} />
+      <ProductForm
+        categories={categories.categories}
+        options={options.options}
+      />
     </>
   );
 }

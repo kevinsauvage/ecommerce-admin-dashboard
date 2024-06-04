@@ -1,15 +1,6 @@
 'use client';
 
-import {
-  Category,
-  Image,
-  Option,
-  OptionValue,
-  Product,
-  Tag,
-  Variant,
-  VariantOptionValue,
-} from '@prisma/client';
+import { Category, Prisma } from '@prisma/client';
 import { LucideX, PlusCircle } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -37,6 +28,7 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -44,14 +36,65 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Toggle } from '@/components/ui/toggle';
 import { useToast } from '@/components/ui/use-toast';
+import { CategoryTypeWithRelations } from '@/types';
 
-const buildVariantsOptions = (
-  variants: Array<
-    Variant & {
-      options: Array<VariantOptionValue>;
-    }
-  >
-) => {
+type ProductWithRelations = Prisma.ProductGetPayload<{
+  include: {
+    category: true;
+    images: true;
+    variants: {
+      include: {
+        options: {
+          include: {
+            optionValue: true;
+            option: true;
+          };
+        };
+      };
+    };
+    seo: true;
+    tags: true;
+  };
+}>;
+
+type VariantWithOption = Prisma.VariantGetPayload<{
+  include: {
+    options: {
+      include: {
+        optionValue: true;
+        option: true;
+      };
+    };
+  };
+}>;
+
+type OptionWithValues = Prisma.OptionGetPayload<{
+  include: {
+    values: true;
+  };
+}>;
+
+interface ActionResponse {
+  error?: string;
+  [key: string]: string | Array<string> | undefined;
+}
+
+export interface VariantInput {
+  stock: string;
+  options: Array<{
+    optionId: string;
+    valueId: string;
+  }>;
+}
+
+interface MediaSelectionProps {
+  error?: ActionResponse;
+  productImages: Array<{ url: string }>;
+  onChange: (url: string) => void;
+  onRemove: (url: string) => void;
+}
+
+const buildVariantsOptions = (variants: Array<VariantWithOption>) => {
   const result = variants?.map((variant) => {
     return {
       stock: variant.stock.toString(),
@@ -65,18 +108,6 @@ const buildVariantsOptions = (
   });
   return result || [];
 };
-
-interface ActionResponse {
-  error?: string;
-  [key: string]: string | Array<string> | undefined;
-}
-
-interface MediaSelectionProps {
-  error?: ActionResponse;
-  productImages: Array<{ url: string }>;
-  onChange: (url: string) => void;
-  onRemove: (url: string) => void;
-}
 
 function MediaSelection({
   onChange,
@@ -110,14 +141,6 @@ function MediaSelection({
   );
 }
 
-export interface VariantInput {
-  stock: string;
-  options: Array<{
-    optionId: string;
-    valueId: string;
-  }>;
-}
-
 function VariantSelection({
   variants,
   onChange,
@@ -126,11 +149,7 @@ function VariantSelection({
 }: {
   variants: Array<VariantInput>;
   onChange: (variants: Array<VariantInput>) => void;
-  options: Array<
-    Option & {
-      values: Array<OptionValue>;
-    }
-  >;
+  options: Array<OptionWithValues>;
   error: ActionResponse;
 }) {
   const [selectedOptions, setSelectedOptions] = useState(
@@ -145,7 +164,7 @@ function VariantSelection({
 
   const onCheckedChange = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-    option: Option & { values: Array<OptionValue> }
+    option: OptionWithValues
   ) => {
     e.preventDefault();
     setSelectedOptions((prev) => {
@@ -247,7 +266,7 @@ function ProductInformationSelection({
   product,
   error,
 }: {
-  product?: Product;
+  product?: ProductWithRelations;
   error?: ActionResponse;
 }) {
   return (
@@ -301,7 +320,7 @@ function SEOSelection({
   product,
   error,
 }: {
-  product?: Product;
+  product?: ProductWithRelations;
   error: ActionResponse;
 }) {
   return (
@@ -320,7 +339,7 @@ function SEOSelection({
             id="metaTitle"
             name="metaTitle"
             placeholder="Meta title"
-            defaultValue={product?.metaTitle}
+            defaultValue={product?.seo?.metaTitle}
           />
           <FormErrorMessage message={error?.metaTitle} />
         </FormInputWrapper>
@@ -331,7 +350,7 @@ function SEOSelection({
             id="metaDescription"
             name="metaDescription"
             placeholder="Meta description"
-            defaultValue={product?.metaDescription}
+            defaultValue={product?.seo?.metaDescription}
           />
           <FormErrorMessage message={error?.metaDescription} />
         </FormInputWrapper>
@@ -342,7 +361,7 @@ function SEOSelection({
             id="metaKeywords"
             name="metaKeywords"
             placeholder="Shirt, T-shirt, Cotton, Summer, Fashion"
-            defaultValue={product?.metaKeywords}
+            defaultValue={product?.seo?.metaKeywords}
           />
           <FormErrorMessage message={error?.metaKeywords} />
         </FormInputWrapper>
@@ -355,7 +374,7 @@ function PriceSelection({
   product,
   error,
 }: {
-  product?: Product;
+  product?: ProductWithRelations;
   error: ActionResponse;
 }) {
   return (
@@ -416,7 +435,7 @@ function InventorySelection({
   error,
   variants,
 }: {
-  product?: Product;
+  product?: ProductWithRelations;
   error: ActionResponse;
   variants: Array<VariantInput>;
 }) {
@@ -455,13 +474,50 @@ function InventorySelection({
   );
 }
 
+const categorySelectRecursive = (
+  categories: Array<CategoryTypeWithRelations>,
+  categoryId?: string | null
+) => {
+  return categories.map((category) => {
+    if (category.childCategories.length > 0) {
+      return (
+        <>
+          <SelectItem
+            key={category.id}
+            value={category.id}
+            disabled={category.id === categoryId}
+          >
+            {category.name}
+          </SelectItem>
+          <SelectGroup className="ml-6">
+            {categorySelectRecursive(
+              category.childCategories as Array<CategoryTypeWithRelations>,
+              categoryId
+            )}
+          </SelectGroup>
+        </>
+      );
+    } else {
+      return (
+        <SelectItem
+          key={category.id}
+          value={category.id}
+          disabled={category.id === categoryId}
+        >
+          {category.name}
+        </SelectItem>
+      );
+    }
+  });
+};
+
 function CategorySelection({
   categories,
   product,
   error,
 }: {
-  categories: Array<Category>;
-  product?: Product;
+  categories: Array<CategoryTypeWithRelations>;
+  product?: ProductWithRelations;
   error: ActionResponse;
 }) {
   return (
@@ -477,15 +533,9 @@ function CategorySelection({
           </Label>
           <Select name="categoryId" defaultValue={product?.categoryId}>
             <SelectTrigger>
-              <SelectValue placeholder="Select a category" />
+              <SelectValue placeholder="Parent category" />
             </SelectTrigger>
-            <SelectContent>
-              {categories?.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
+            <SelectContent>{categorySelectRecursive(categories)}</SelectContent>
           </Select>
           <FormErrorMessage message={error?.categoryId} />
         </FormInputWrapper>
@@ -564,7 +614,7 @@ function VisibilitySelection({
   product,
   error,
 }: {
-  product?: Product;
+  product?: ProductWithRelations;
   error: ActionResponse;
 }) {
   return (
@@ -627,21 +677,9 @@ export default function ProductForm({
   categories,
   options,
 }: {
-  product?: Product & {
-    images: Array<Image>;
-    variants: Array<
-      Variant & {
-        options: Array<VariantOptionValue>;
-      }
-    >;
-    tags: Array<Tag>;
-  };
+  product?: ProductWithRelations;
   categories: Array<Category>;
-  options: Array<
-    Option & {
-      values: Array<OptionValue>;
-    }
-  >;
+  options: Array<OptionWithValues>;
 }) {
   const [productImages, setProductImages] = useState<Array<{ url: string }>>(
     product?.images || []
@@ -708,7 +746,7 @@ export default function ProductForm({
             variants={variants}
           />
           <CategorySelection
-            categories={categories}
+            categories={categories as CategoryTypeWithRelations[]}
             error={error}
             product={product}
           />

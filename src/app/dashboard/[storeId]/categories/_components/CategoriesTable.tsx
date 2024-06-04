@@ -1,7 +1,6 @@
 /* eslint-disable react-perf/jsx-no-new-array-as-prop */
 'use client';
 
-import { Category } from '@prisma/client';
 import { Copy, Edit, MoreVerticalIcon, Trash } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -26,23 +25,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
+import { CategoryTypeWithRelations } from '@/types';
 
 export default function CategoriesTable({
   categories = [],
 }: {
-  categories: Array<
-    Category & {
-      childCategories?: Array<
-        Category & {
-          childCategories: Array<
-            Category & {
-              childCategories: Array<Category>;
-            }
-          >;
-        }
-      >;
-    }
-  >;
+  categories: Array<CategoryTypeWithRelations>;
 }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState<boolean>(false);

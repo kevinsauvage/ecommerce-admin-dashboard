@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation';
 import CategoryForm from '../../_components/CategoryForm';
 import BreadcrumbNav from '@/components/BreadcrumbNav';
 import Heading from '@/components/Heading';
-import db from '@/db/db';
-import { CategoriesTypeWithChildrenCategories } from '@/types';
+import { getCategories, getCategory } from '@/db/categories';
+import { CategoryTypeWithRelations } from '@/types';
 
 const getBreadcrumbItems = (storeId: string) => [
   { name: 'Dashboard', href: `/dashboard/${storeId}` },
@@ -19,25 +19,20 @@ export default async function CategoryEditPage({
 }) {
   const { storeId, categoryId } = params;
 
-  const category = await db.category.findUnique({ where: { id: categoryId } });
-  const categories = await db.category.findMany({
-    where: {
+  const [category, categories] = await Promise.all([
+    getCategory({
       storeId,
-      id: { not: categoryId },
-    },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      childCategories: {
-        include: {
-          childCategories: {
-            include: {
-              childCategories: true,
-            },
-          },
-        },
-      },
-    },
-  });
+      categoryId,
+      withChildCategories: true,
+    }),
+    getCategories({
+      storeId,
+      page: 1,
+      pageSize: 100,
+      withChildCategories: true,
+      whereExtra: { id: { not: categoryId } },
+    }),
+  ]);
 
   if (!category) {
     redirect(`/dashboard/${storeId}/categories`);
@@ -49,7 +44,7 @@ export default async function CategoryEditPage({
       <BreadcrumbNav items={getBreadcrumbItems(storeId)} />
       <CategoryForm
         category={category}
-        categories={categories as Array<CategoriesTypeWithChildrenCategories>}
+        categories={categories.categories as CategoryTypeWithRelations[]}
       />
     </>
   );

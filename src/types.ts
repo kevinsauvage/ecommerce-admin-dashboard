@@ -1,17 +1,24 @@
-import { Category } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
-export type CategoriesTypeWithChildrenCategories = Category & {
-  childCategories: Array<
-    Category & {
-      childCategories: Array<
-        Category & {
-          childCategories: Array<
-            Category & {
-              childCategories: Array<Category>;
-            }
-          >;
-        }
-      >;
-    }
-  >;
-};
+export type CategoryTypeWithRelations = Prisma.CategoryGetPayload<{
+  include: {
+    childCategories: {
+      include: {
+        childCategories: {
+          include: {
+            childCategories: true;
+          };
+        };
+      };
+    };
+    parent: {
+      include: {
+        parent: {
+          include: {
+            parent: true;
+          };
+        };
+      };
+    };
+  };
+}>;

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import OptionForm from '../../_components/OptionForm';
 import BreadcrumbNav from '@/components/BreadcrumbNav';
 import Heading from '@/components/Heading';
-import db from '@/db/db';
+import { getOption } from '@/db/options';
 
 const getBreadcrumbItems = (storeId: string) => [
   { name: 'Dashboard', href: `/dashboard/${storeId}` },
@@ -17,15 +17,8 @@ export default async function OptionEditPage({
   params: { storeId: string; optionId: string };
 }) {
   const { storeId, optionId } = params;
-
-  const option = await db.option.findUnique({
-    where: { id: optionId },
-    include: { values: true },
-  });
-
-  if (!option) {
-    redirect(`/dashboard/${storeId}/options`);
-  }
+  const option = await getOption({ storeId, optionId });
+  if (!option) redirect(`/dashboard/${storeId}/options`);
 
   return (
     <>

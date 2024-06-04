@@ -30,6 +30,7 @@ export async function POST(
   const { cartProducts, currency = 'USD' }: Body = await req.json();
   const { searchParams } = new URL(req.url);
   const redirectUrl = searchParams.get('redirectUrl');
+  const storeId = params.storeId;
 
   if (!cartProducts.length) {
     return new NextResponse('Cart Products are required', { status: 400 });
@@ -42,6 +43,7 @@ export async function POST(
 
   const products = await db.product.findMany({
     where: {
+      storeId,
       id: { in: productsWithoutVariants.map((item) => item.id) },
     },
     include: {

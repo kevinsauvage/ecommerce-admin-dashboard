@@ -26,26 +26,39 @@ export const getOptions = async (params: GetOptionsParams) => {
     sort = 'newest',
   } = params || {};
 
+  const where = {
+    storeId,
+    name: { contains: query, mode: Prisma.QueryMode.insensitive },
+  };
+
+  const include = {
+    values: true,
+  };
+
   const [options, count] = await Promise.all([
     db.option.findMany({
-      where: {
-        storeId,
-        name: { contains: query, mode: Prisma.QueryMode.insensitive },
-      },
-      include: {
-        values: true,
-      },
+      where,
+      include,
       skip: (Number(page) - 1) * pageSize,
       take: pageSize,
       orderBy: sortMap.get(sort),
     }),
-    db.option.count({
-      where: {
-        storeId,
-        name: { contains: query },
-      },
-    }),
+    db.option.count({ where }),
   ]);
 
   return { options, count };
+};
+
+type GetOptionParams = {
+  storeId: string;
+  optionId: string;
+};
+
+export const getOption = async (params: GetOptionParams) => {
+  const { storeId, optionId } = params;
+
+  return db.option.findUnique({
+    where: { id: optionId, storeId },
+    include: { values: true },
+  });
 };

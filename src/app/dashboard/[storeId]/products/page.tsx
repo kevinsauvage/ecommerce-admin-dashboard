@@ -38,6 +38,7 @@ export default async function ProductsPage({
     pageSize,
     isArchived: filter?.includes('archived'),
     isFeatured: filter?.includes('featured'),
+    withImages: true,
   });
 
   const productsSearchAction = async (payload: FormData) => {

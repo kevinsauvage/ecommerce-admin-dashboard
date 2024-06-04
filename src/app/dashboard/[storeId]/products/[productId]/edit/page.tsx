@@ -3,30 +3,29 @@ import { redirect } from 'next/navigation';
 import ProductForm from '../../_components/ProductForm';
 import BreadcrumbNav from '@/components/BreadcrumbNav';
 import Heading from '@/components/Heading';
-import db from '@/db/db';
+import { getCategories } from '@/db/categories';
+import { getOptions } from '@/db/options';
+import { getProduct } from '@/db/products';
 
 const getData = async (productId: string, storeId: string) => {
   return Promise.all([
-    db.product.findUnique({
-      where: { id: productId },
-      include: {
-        category: true,
-        images: true,
-        variants: {
-          include: {
-            options: {
-              include: {
-                optionValue: true,
-                option: true,
-              },
-            },
-          },
-        },
-        tags: true,
-      },
+    getProduct({
+      storeId,
+      productId,
+      withImages: true,
+      withVariants: true,
+      withTags: true,
+      withCategory: true,
+      withSeo: true,
     }),
-    db.category.findMany({ where: { storeId } }),
-    db.option.findMany({ where: { storeId }, include: { values: true } }),
+    getCategories({
+      storeId,
+      page: 1,
+      pageSize: 100,
+      withChildCategories: true,
+      onlyParentCategories: true,
+    }),
+    getOptions({ storeId, page: 1, pageSize: 100 }),
   ]);
 };
 
@@ -52,8 +51,8 @@ export default async function ProductEditPage({
       <BreadcrumbNav items={getBreadcrumbItems(storeId)} />
       <ProductForm
         product={JSON.parse(JSON.stringify(product))}
-        categories={categories}
-        options={options}
+        categories={categories.categories}
+        options={options.options}
       />
     </>
   );

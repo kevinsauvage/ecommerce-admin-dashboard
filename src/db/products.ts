@@ -20,8 +20,12 @@ type GetProductsParams = {
   page?: number;
   pageSize?: number;
   isArchived?: boolean;
-  isActive?: boolean;
   isFeatured?: boolean;
+  withImages?: boolean;
+  withVariants?: boolean;
+  withTags?: boolean;
+  withCategory?: boolean;
+  withSeo?: boolean;
 };
 
 export const getProducts = async (params: GetProductsParams) => {
@@ -33,6 +37,11 @@ export const getProducts = async (params: GetProductsParams) => {
     sort = 'newest',
     isArchived = undefined,
     isFeatured = undefined,
+    withCategory = false,
+    withImages = false,
+    withVariants = false,
+    withTags = false,
+    withSeo = false,
   } = params || {};
 
   const OR = [{ isArchived }, { isFeatured }].filter((condition) =>
@@ -51,15 +60,29 @@ export const getProducts = async (params: GetProductsParams) => {
     AND: AND.length ? AND : undefined,
   };
 
+  const include = {
+    category: withCategory,
+    variants: withVariants
+      ? {
+          include: {
+            options: {
+              include: {
+                optionValue: true,
+                option: true,
+              },
+            },
+          },
+        }
+      : undefined,
+    images: withImages,
+    tags: withTags,
+    seo: withSeo,
+  };
+
   const [products, count] = await Promise.all([
     db.product.findMany({
       where,
-      include: {
-        category: true,
-        variants: true,
-        images: true,
-        tags: true,
-      },
+      include,
       orderBy: sortMap.get(sort) ?? { createdAt: 'desc' },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -68,4 +91,58 @@ export const getProducts = async (params: GetProductsParams) => {
   ]);
 
   return { products, count };
+};
+
+type GetProductParams = {
+  storeId: string;
+  productId: string;
+  isFeatured?: boolean;
+  isArchived?: boolean;
+  withImages?: boolean;
+  withVariants?: boolean;
+  withTags?: boolean;
+  withCategory?: boolean;
+  withSeo?: boolean;
+};
+
+export const getProduct = async (params: GetProductParams) => {
+  const {
+    storeId,
+    productId,
+    isFeatured,
+    isArchived,
+    withCategory = false,
+    withImages = false,
+    withVariants = false,
+    withTags = false,
+    withSeo = false,
+  } = params || {};
+
+  const where = {
+    storeId,
+    id: productId,
+    isFeatured,
+    isArchived,
+  };
+
+  const include = {
+    category: withCategory,
+    variants: withVariants
+      ? {
+          include: {
+            options: {
+              include: {
+                optionValue: true,
+                option: true,
+              },
+            },
+          },
+        }
+      : undefined,
+    images: withImages,
+    tags: withTags,
+    seo: withSeo,
+  };
+
+  return db.product.findUnique({ where, include });
 };

@@ -68,12 +68,22 @@ export async function addProduct(
 
   if (!result.success) return result.error.formErrors.fieldErrors;
 
-  const { stock, images, variants: variantsData = [] } = result.data;
+  const {
+    stock,
+    images,
+    variants: variantsData = [],
+    metaDescription,
+    metaKeywords,
+    metaTitle,
+    categoryId,
+    ...rest
+  } = result.data;
 
   try {
     const product = await db.product.create({
       data: {
-        ...result.data,
+        ...rest,
+        storeId,
         stock: stock || 0,
         images: { createMany: { data: images } },
         tags: {
@@ -90,7 +100,14 @@ export async function addProduct(
             })),
           },
         },
-        storeId,
+        seo: {
+          create: {
+            metaTitle,
+            metaDescription,
+            metaKeywords,
+          },
+        },
+        categoryId,
       },
     });
 
@@ -155,13 +172,22 @@ export async function updateProduct(
 
   if (!result.success) return result.error.formErrors.fieldErrors;
 
-  const { stock, images, variants: variantsData = [] } = result.data;
+  const {
+    stock,
+    images,
+    variants: variantsData = [],
+    metaDescription,
+    metaKeywords,
+    metaTitle,
+    categoryId,
+    ...rest
+  } = result.data;
 
   try {
     await db.product.update({
       where: { id: productId, storeId },
       data: {
-        ...result.data,
+        ...rest,
         stock: stock || 0,
         images: { deleteMany: {}, createMany: { data: images } },
         tags: {
@@ -179,6 +205,21 @@ export async function updateProduct(
             })),
           },
         },
+        seo: {
+          upsert: {
+            create: {
+              metaTitle,
+              metaDescription,
+              metaKeywords,
+            },
+            update: {
+              metaTitle,
+              metaDescription,
+              metaKeywords,
+            },
+          },
+        },
+        categoryId,
       },
     });
 

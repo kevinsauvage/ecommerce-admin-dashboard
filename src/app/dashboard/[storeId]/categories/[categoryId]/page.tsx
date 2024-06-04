@@ -1,12 +1,11 @@
-import { Category } from '@prisma/client';
-
 import CategoriesTable from '../_components/CategoriesTable';
 import BreadcrumbNav from '@/components/BreadcrumbNav';
 import Heading from '@/components/Heading';
 import { Card, CardContent } from '@/components/ui/card';
-import db from '@/db/db';
+import { getCategory } from '@/db/categories';
+import { CategoryTypeWithRelations } from '@/types';
 
-const getCategoryBreadcrumb = (category: Category) => {
+const getCategoryBreadcrumb = (category: CategoryTypeWithRelations) => {
   const breadcrumb = [];
 
   let currentCategory = category;
@@ -33,52 +32,24 @@ export default async function CategoriesPage({
 }) {
   const { storeId, categoryId } = params;
 
-  const category = await db.category.findFirst({
-    where: { storeId, id: categoryId },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      parent: {
-        include: {
-          parent: {
-            include: {
-              parent: true,
-            },
-          },
-        },
-      },
-      childCategories: {
-        include: {
-          childCategories: {
-            include: {
-              childCategories: true,
-            },
-          },
-        },
-      },
-    },
+  const category = await getCategory({
+    storeId,
+    categoryId,
+    withChildCategories: true,
+    withParentCategory: true,
   });
 
   return (
     <>
       <Heading title={`Category (${category?.name})`} />
-      <BreadcrumbNav items={getCategoryBreadcrumb(category as Category)} />
+      <BreadcrumbNav
+        items={getCategoryBreadcrumb(category as CategoryTypeWithRelations)}
+      />
       <Card>
         <CardContent className="p-0">
           <CategoriesTable
             categories={
-              category?.childCategories as Array<
-                Category & {
-                  childCategories: Array<
-                    Category & {
-                      childCategories: Array<
-                        Category & {
-                          childCategories: Array<Category>;
-                        }
-                      >;
-                    }
-                  >;
-                }
-              >
+              category?.childCategories as Array<CategoryTypeWithRelations>
             }
           />{' '}
         </CardContent>

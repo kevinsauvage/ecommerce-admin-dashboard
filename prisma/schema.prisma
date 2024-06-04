@@ -13,7 +13,7 @@ datasource db {
 // The Store model represents a store entity with related information and relations to other models.
 model Store {
   id          String     @id @default(uuid()) // Primary key
-  name        String     
+  name        String
   description String     @default("")
   address     String     @default("")
   phone       String     @default("")
@@ -23,12 +23,12 @@ model Store {
   logo        String     @default("")
   email       String     @default("")
   userId      String
-  categories  Category[] @relation("StoreToCategory") // One-to-many relation with Category
-  products    Product[]  @relation("StoreToProduct") // One-to-many relation with Product
-  orders      Order[]    @relation("StoreToOrder") // One-to-many relation with Order
-  users       User[]     @relation("UserToStore") // One-to-many relation with User
-  tags        Tag[]      @relation("StoreToProduct") // One-to-many relation with Tag
-  options     Option[]   @relation("StoreToProduct") // One-to-many relation with Option
+  categories  Category[]
+  products    Product[]
+  orders      Order[]
+  users       User[]
+  tags        Tag[]
+  options     Option[]
 
   createdAt DateTime @default(now()) // Auto-generated timestamp
   updatedAt DateTime @updatedAt // Auto-updated timestamp
@@ -40,129 +40,140 @@ model Store {
 model Category {
   id              String     @id @default(uuid())
   storeId         String // Foreign key to Store
-  store           Store      @relation("StoreToCategory", fields: [storeId], references: [id], onDelete: Cascade)
+  store           Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
   imageURL        String?
   name            String
   description     String     @default("")
-  products        Product[]  @relation("CategoryToProduct") // One-to-many relation with Product
+  products        Product[]
   parentId        String?
   parent          Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
   childCategories Category[] @relation("CategoryToCategory") // One-to-many relation with Category
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([storeId])
 }
+
 // The Product model represents a product entity with various attributes and relations.
 model Product {
-  id              String      @id @default(uuid())
-  storeId         String // Foreign key to Store
-  store           Store       @relation("StoreToProduct", fields: [storeId], references: [id], onDelete: Cascade)
-  categoryId      String // Foreign key to Category
-  category        Category    @relation("CategoryToProduct", fields: [categoryId], references: [id])
-  name            String
-  description     String
-  slug            String
-  metaTitle       String      @default("")
-  metaDescription String      @default("")
-  metaKeywords    String      @default("")
-  price           Decimal
-  salePrice       Decimal?
-  shippingPrice   Decimal?
-  stock           Int
-  isFeatured      Boolean     @default(false)
-  isArchived      Boolean     @default(false)
-  images          Image[] // One-to-many relation with Image
-  orderItems      OrderItem[] // One-to-many relation with OrderItem
-  variants        Variant[] // One-to-many relation with Variant
-  tags            Tag[]       @relation("ProductTags") // Many-to-many relation with Tag
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id            String      @id @default(uuid())
+  storeId       String // Foreign key to Store
+  store         Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  categoryId    String // Foreign key to Category
+  category      Category    @relation(fields: [categoryId], references: [id])
+  name          String
+  description   String
+  slug          String
+  price         Decimal
+  salePrice     Decimal?
+  shippingPrice Decimal?
+  stock         Int
+  isFeatured    Boolean     @default(false)
+  isArchived    Boolean     @default(false)
+  images        Image[] // One-to-many relation with Image
+  orderItems    OrderItem[] // One-to-many relation with OrderItem
+  variants      Variant[] // One-to-many relation with Variant
+  tags          Tag[]
+  seo           SEO?        @relation
+  seoId         String?     @unique
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@index([storeId])
   @@index([categoryId])
 }
 
+model SEO {
+  id              String  @id @default(uuid())
+  metaTitle       String  @default("")
+  metaDescription String  @default("")
+  metaKeywords    String  @default("")
+  product         Product @relation(fields: [productId], references: [id])
+  productId       String  @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // The Variant model represents a product variant, such as different sizes or colors.
 model Variant {
-  id         String      @id @default(cuid())
+  id         String               @id @default(cuid())
   stock      Int
   productId  String
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product    Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
   options    VariantOptionValue[] // Many-to-many relation with OptionValue
   orderItems OrderItem[] // One-to-many relation with OrderItem
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
 
   @@index([productId])
 }
 
 // The Option model represents a set of values for a variant, such as color options.
 model Option {
-  id        String      @id @default(cuid())
+  id        String               @id @default(cuid())
   name      String
   storeId   String // Foreign key to Store
-  store     Store    @relation("StoreToProduct", fields: [storeId], references: [id], onDelete: Cascade)
+  store     Store                @relation(fields: [storeId], references: [id], onDelete: Cascade)
   values    OptionValue[] // One-to-many relation with OptionValue
   variants  VariantOptionValue[] // Many-to-many relation with Variant
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   @@index([storeId])
 }
 
 // The OptionValue model represents a specific value within an option, such as a specific color.
 model OptionValue {
-  id        String             @id @default(cuid())
+  id        String               @id @default(cuid())
   name      String
-  optionId  String             // Foreign key to Option
-  option    Option             @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  optionId  String // Foreign key to Option
+  option    Option               @relation(fields: [optionId], references: [id], onDelete: Cascade)
   variants  VariantOptionValue[] // Many-to-many relation with Variant
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
 
   @@index([optionId])
 }
 
 // Junction table to represent the many-to-many relationship between Variant and OptionValue
 model VariantOptionValue {
-  variantId    String
-  variant      Variant     @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantId     String
+  variant       Variant     @relation(fields: [variantId], references: [id], onDelete: Cascade)
   optionValueId String
-  optionValue  OptionValue @relation(fields: [optionValueId], references: [id], onDelete: Cascade)
-  optionId   String
-  option      Option      @relation(fields: [optionId], references: [id], onDelete: Cascade)
-  
+  optionValue   OptionValue @relation(fields: [optionValueId], references: [id], onDelete: Cascade)
+  optionId      String
+  option        Option      @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
   @@id([variantId, optionValueId])
   @@index([variantId])
   @@index([optionValueId])
 }
-
-
 
 // The Tag model represents tags that can be associated with products.
 model Tag {
   id       String    @id @default(uuid())
   name     String    @unique
   storeId  String // Foreign key to Store
-  store    Store     @relation("StoreToProduct", fields: [storeId], references: [id], onDelete: Cascade)
-  products Product[] @relation("ProductTags") // Many-to-many relation with Product
+  store    Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  products Product[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
-
 
 // The Order model represents a customer order with related information.
 model Order {
   id         String      @id @default(uuid())
   storeId    String // Foreign key to Store
-  store      Store       @relation("StoreToOrder", fields: [storeId], references: [id], onDelete: Cascade)
+  store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
   orderItems OrderItem[] // One-to-many relation with OrderItem
   isPaid     Boolean     @default(false)
   totalPrice Decimal     @default(0)
   phone      String      @default("")
   address    String      @default("")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -191,6 +202,7 @@ model Image {
   productId String // Foreign key to Product
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   url       String // URL of the image
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -199,12 +211,12 @@ model Image {
 
 // The User model represents a user entity with authentication details.
 model User {
-  id       String  @id @default(uuid())
-  email    String  @unique
-  password String
-  role     String // e.g., admin, manager, staff
-  isActive Boolean @default(true)
-  stores   Store[] @relation("UserToStore") // One-to-many relation with Store
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      String // e.g., admin, manager, staff
+  isActive  Boolean  @default(true)
+  stores    Store[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

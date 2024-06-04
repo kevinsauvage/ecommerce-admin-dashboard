@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getCategories } from '@/db/categories';
+import { CategoryTypeWithRelations } from '@/types';
 
 export default async function CategoriesPage({
   params,
@@ -34,6 +35,7 @@ export default async function CategoriesPage({
     query,
     sort,
     onlyParentCategories: true,
+    withChildCategories: true,
     pageSize,
   });
 
@@ -82,7 +84,9 @@ export default async function CategoriesPage({
           <>
             <Card>
               <CardContent className="p-0">
-                <CategoriesTable categories={categories} />
+                <CategoriesTable
+                  categories={categories as CategoryTypeWithRelations[]}
+                />
               </CardContent>
             </Card>
             <PaginationComponent

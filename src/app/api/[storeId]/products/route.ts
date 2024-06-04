@@ -5,11 +5,29 @@ import { getProducts } from '@/db/products';
 const getQueryParams = (searchParams: URLSearchParams) => {
   const page = Number(searchParams.get('page'));
   const pageSize = Number(searchParams.get('pageSize'));
+
   const query = searchParams.get('query') || '';
   const sort = searchParams.get('sort') || 'newest';
   const filter = searchParams.get('filter') || '';
 
-  return { page, pageSize, query, sort, filter };
+  const withVariants = searchParams.get('withVariants') === 'true';
+  const withTags = searchParams.get('withTags') === 'true';
+  const withCategory = searchParams.get('withCategory') === 'true';
+  const withSeo = searchParams.get('withSeo') === 'true';
+  const withImages = searchParams.get('withImages') === 'true';
+
+  return {
+    page,
+    pageSize,
+    query,
+    sort,
+    filter,
+    withVariants,
+    withTags,
+    withCategory,
+    withSeo,
+    withImages,
+  };
 };
 
 export async function GET(
@@ -19,8 +37,18 @@ export async function GET(
   try {
     const { storeId } = params || {};
     const { searchParams } = new URL(req.url);
-    const { page, pageSize, query, sort, filter } =
-      getQueryParams(searchParams);
+    const {
+      page,
+      pageSize,
+      query,
+      sort,
+      filter,
+      withTags,
+      withCategory,
+      withVariants,
+      withSeo,
+      withImages,
+    } = getQueryParams(searchParams);
 
     const selectedFilters = filter?.split(',');
 
@@ -32,6 +60,11 @@ export async function GET(
       sort,
       isArchived: selectedFilters?.includes('archived'),
       isFeatured: selectedFilters?.includes('featured'),
+      withImages,
+      withVariants,
+      withTags,
+      withCategory,
+      withSeo,
     });
 
     return NextResponse.json({ products, count });

@@ -30,28 +30,38 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { CategoriesTypeWithChildrenCategories } from '@/types';
+import { CategoryTypeWithRelations } from '@/types';
 
 const categorySelectRecursive = (
-  categories: Array<CategoriesTypeWithChildrenCategories>
+  categories: Array<CategoryTypeWithRelations>,
+  categoryId?: string | null
 ) => {
   return categories.map((category) => {
     if (category.childCategories.length > 0) {
       return (
         <>
-          <SelectItem key={category.id} value={category.id}>
+          <SelectItem
+            key={category.id}
+            value={category.id}
+            disabled={category.id === categoryId}
+          >
             {category.name}
           </SelectItem>
           <SelectGroup className="ml-6">
             {categorySelectRecursive(
-              category.childCategories as Array<CategoriesTypeWithChildrenCategories>
+              category.childCategories as Array<CategoryTypeWithRelations>,
+              categoryId
             )}
           </SelectGroup>
         </>
       );
     } else {
       return (
-        <SelectItem key={category.id} value={category.id}>
+        <SelectItem
+          key={category.id}
+          value={category.id}
+          disabled={category.id === categoryId}
+        >
           {category.name}
         </SelectItem>
       );
@@ -72,7 +82,7 @@ export default function CategoryForm({
   categories,
 }: {
   category?: Category;
-  categories: Array<CategoriesTypeWithChildrenCategories>;
+  categories: Array<CategoryTypeWithRelations>;
 }) {
   const [categoryImage, setCategoryImage] = useState<string | null | undefined>(
     category?.imageURL
@@ -155,16 +165,14 @@ export default function CategoryForm({
               <CardDescription>Select the parent category</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3">
-              <FormInputWrapper>
-                <Select name="parentId">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Parent category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categorySelectRecursive(categories)}
-                  </SelectContent>
-                </Select>
-              </FormInputWrapper>
+              <Select name="parentId">
+                <SelectTrigger>
+                  <SelectValue placeholder="Parent category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categorySelectRecursive(categories, category?.id)}
+                </SelectContent>
+              </Select>
             </CardContent>
           </Card>
         </div>
