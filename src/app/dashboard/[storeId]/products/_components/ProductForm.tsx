@@ -9,6 +9,7 @@ import { useFormState, useFormStatus } from 'react-dom';
 
 import VariantTable from './VariantTable';
 import { addProduct, updateProduct } from '@/actions/productActions';
+import CategorySelector from '@/components/CategorySelector';
 import Form from '@/components/Form';
 import FormErrorMessage from '@/components/FormErrorMessage';
 import FormInputWrapper from '@/components/FormInputWrapper';
@@ -25,14 +26,6 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Toggle } from '@/components/ui/toggle';
 import { useToast } from '@/components/ui/use-toast';
@@ -52,6 +45,7 @@ type ProductWithRelations = Prisma.ProductGetPayload<{
         };
       };
     };
+    categories: true;
     seo: true;
     tags: true;
   };
@@ -75,7 +69,7 @@ type OptionWithValues = Prisma.OptionGetPayload<{
 }>;
 
 interface ActionResponse {
-  error?: string;
+  message?: string;
   [key: string]: string | Array<string> | undefined;
 }
 
@@ -474,51 +468,16 @@ function InventorySelection({
   );
 }
 
-const categorySelectRecursive = (
-  categories: Array<CategoryTypeWithRelations>,
-  categoryId?: string | null
-) => {
-  return categories.map((category) => {
-    if (category.childCategories.length > 0) {
-      return (
-        <>
-          <SelectItem
-            key={category.id}
-            value={category.id}
-            disabled={category.id === categoryId}
-          >
-            {category.name}
-          </SelectItem>
-          <SelectGroup className="ml-6">
-            {categorySelectRecursive(
-              category.childCategories as Array<CategoryTypeWithRelations>,
-              categoryId
-            )}
-          </SelectGroup>
-        </>
-      );
-    } else {
-      return (
-        <SelectItem
-          key={category.id}
-          value={category.id}
-          disabled={category.id === categoryId}
-        >
-          {category.name}
-        </SelectItem>
-      );
-    }
-  });
-};
-
 function CategorySelection({
   categories,
-  product,
+  selectedCategories = [],
+  setSelectedCategories,
   error,
 }: {
   categories: Array<CategoryTypeWithRelations>;
-  product?: ProductWithRelations;
+  selectedCategories?: Category[];
   error: ActionResponse;
+  setSelectedCategories: (categories: Category[]) => void;
 }) {
   return (
     <Card>
@@ -527,19 +486,17 @@ function CategorySelection({
         <CardDescription>Add a category to your product.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        <FormInputWrapper>
-          <Label htmlFor="categoryId" className="sr-only">
-            Category
-          </Label>
-          <Select name="categoryId" defaultValue={product?.categoryId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Parent category" />
-            </SelectTrigger>
-            <SelectContent>{categorySelectRecursive(categories)}</SelectContent>
-          </Select>
-          <FormErrorMessage message={error?.categoryId} />
-        </FormInputWrapper>
+        <CategorySelector
+          categories={categories}
+          selectedCategories={selectedCategories}
+          onChange={(categories) => {
+            setSelectedCategories(categories);
+          }}
+        />
       </CardContent>
+      <CardFooter>
+        <FormErrorMessage message={error?.categories} />
+      </CardFooter>
     </Card>
   );
 }
@@ -678,7 +635,7 @@ export default function ProductForm({
   options,
 }: {
   product?: ProductWithRelations;
-  categories: Array<Category>;
+  categories: Array<CategoryTypeWithRelations>;
   options: Array<OptionWithValues>;
 }) {
   const [productImages, setProductImages] = useState<Array<{ url: string }>>(
@@ -687,6 +644,9 @@ export default function ProductForm({
   const [tags, setTags] = useState(product?.tags.map((tag) => tag.name) || []);
   const [variants, setVariants] = useState<Array<VariantInput>>(
     buildVariantsOptions(product?.variants || [])
+  );
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>(
+    product?.categories || []
   );
   const { toast } = useToast();
   const { storeId } = useParams() as { storeId: string };
@@ -699,14 +659,23 @@ export default function ProductForm({
           product.id,
           productImages,
           tags,
-          variants
+          variants,
+          selectedCategories.map((category) => category.id)
         )
-      : addProduct.bind(null, storeId, productImages, tags, variants),
+      : addProduct.bind(
+          null,
+          storeId,
+          productImages,
+          tags,
+          variants,
+          selectedCategories.map((category) => category.id)
+        ),
     {}
   );
 
+  console.log('🟩🟪🟦-->  ~ useEffect ~ error:', error);
   useEffect(() => {
-    if (error?.error) {
+    if (error?.message) {
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -746,9 +715,10 @@ export default function ProductForm({
             variants={variants}
           />
           <CategorySelection
-            categories={categories as CategoryTypeWithRelations[]}
+            categories={categories}
             error={error}
-            product={product}
+            setSelectedCategories={setSelectedCategories}
+            selectedCategories={selectedCategories}
           />
           <TagsSelection tags={tags} error={error} onChange={setTags} />
           <VisibilitySelection product={product} error={error} />

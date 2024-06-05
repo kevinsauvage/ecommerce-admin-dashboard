@@ -24,7 +24,7 @@ type GetProductsParams = {
   withImages?: boolean;
   withVariants?: boolean;
   withTags?: boolean;
-  withCategory?: boolean;
+  withCategories?: boolean;
   withSeo?: boolean;
 };
 
@@ -37,7 +37,7 @@ export const getProducts = async (params: GetProductsParams) => {
     sort = 'newest',
     isArchived = undefined,
     isFeatured = undefined,
-    withCategory = false,
+    withCategories = false,
     withImages = false,
     withVariants = false,
     withTags = false,
@@ -61,7 +61,7 @@ export const getProducts = async (params: GetProductsParams) => {
   };
 
   const include = {
-    category: withCategory,
+    categories: withCategories,
     variants: withVariants
       ? {
           include: {
@@ -101,7 +101,7 @@ type GetProductParams = {
   withImages?: boolean;
   withVariants?: boolean;
   withTags?: boolean;
-  withCategory?: boolean;
+  withCategories?: boolean;
   withSeo?: boolean;
 };
 
@@ -111,7 +111,7 @@ export const getProduct = async (params: GetProductParams) => {
     productId,
     isFeatured,
     isArchived,
-    withCategory = false,
+    withCategories = false,
     withImages = false,
     withVariants = false,
     withTags = false,
@@ -126,7 +126,7 @@ export const getProduct = async (params: GetProductParams) => {
   };
 
   const include = {
-    category: withCategory,
+    categories: withCategories,
     variants: withVariants
       ? {
           include: {

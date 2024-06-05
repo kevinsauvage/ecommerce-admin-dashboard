@@ -21,6 +21,7 @@ export default async function CategoryEditPage({
     page: 1,
     pageSize: 100,
     withChildCategories: true,
+    onlyParentCategories: true,
   });
 
   return (

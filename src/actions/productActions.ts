@@ -14,13 +14,17 @@ const productSchema = z.object({
   description: z.string().min(1, { message: 'Please enter a description' }),
   price: z.coerce.number().min(1, { message: 'Please enter a price' }),
   salePrice: z.coerce.number().optional(),
-  categoryId: z.string().min(1, { message: 'Please select a category' }),
+  categories: z
+    .string()
+    .array()
+    .min(1, { message: 'Please select at least one category' }),
   isFeatured: z.boolean().default(false).optional(),
   isArchived: z.boolean().default(false).optional(),
   stock: z.coerce.number().min(0).optional(),
-  images: z.object({ url: z.string() }).array().nonempty({
-    message: 'Please upload at least one image',
-  }),
+  images: z
+    .object({ url: z.string() })
+    .array()
+    .nonempty({ message: 'Please upload at least one image' }),
   tags: z.string().array().optional(),
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
@@ -52,6 +56,7 @@ export async function addProduct(
   productImages: Array<{ url: string }>,
   tags: Array<string>,
   variants: Array<VariantInput>,
+  categoriesIds: string[],
   previousState: unknown,
   formData: FormData
 ) {
@@ -61,13 +66,13 @@ export async function addProduct(
     ...Object.fromEntries(formData.entries()),
     isFeatured: formData.get('isFeatured') === 'on',
     isArchived: formData.get('isArchived') === 'on',
+    categories: categoriesIds,
     images: productImages,
     tags,
     variants,
   });
 
   if (!result.success) return result.error.formErrors.fieldErrors;
-
   const {
     stock,
     images,
@@ -75,7 +80,7 @@ export async function addProduct(
     metaDescription,
     metaKeywords,
     metaTitle,
-    categoryId,
+    categories,
     ...rest
   } = result.data;
 
@@ -107,7 +112,9 @@ export async function addProduct(
             metaKeywords,
           },
         },
-        categoryId,
+        categories: {
+          connect: categories.map((categoryId) => ({ id: categoryId })),
+        },
       },
     });
 
@@ -142,7 +149,7 @@ export async function addProduct(
     );
   } catch (error) {
     console.error(error);
-    return { error: 'Error while trying to add the product' };
+    return { message: 'Error while trying to add the product' };
   }
 
   revalidatePath('/', 'layout');
@@ -155,6 +162,7 @@ export async function updateProduct(
   productImages: Array<{ url: string }>,
   tags: Array<string>,
   variants: Array<VariantInput>,
+  categoriesIds: string[],
   previousState: unknown,
   formData: FormData
 ) {
@@ -166,6 +174,7 @@ export async function updateProduct(
     isFeatured: formData.get('isFeatured') === 'on',
     isArchived: formData.get('isArchived') === 'on',
     images: productImages,
+    categories: categoriesIds,
     tags,
     variants,
   });
@@ -179,7 +188,7 @@ export async function updateProduct(
     metaDescription,
     metaKeywords,
     metaTitle,
-    categoryId,
+    categories,
     ...rest
   } = result.data;
 
@@ -219,7 +228,9 @@ export async function updateProduct(
             },
           },
         },
-        categoryId,
+        categories: {
+          set: categories.map((categoryId) => ({ id: categoryId })),
+        },
       },
     });
 
@@ -254,7 +265,7 @@ export async function updateProduct(
     );
   } catch (error) {
     console.error(error);
-    return { error: 'Error while trying to update the product' };
+    return { message: 'Error while trying to update the product' };
   }
   revalidatePath('/', 'layout');
   redirect(`/dashboard/${storeId}/products`);

@@ -20,14 +20,18 @@ export async function addCategory(
   previousState: unknown,
   formData: FormData
 ) {
-  if (!(await isAuthorized(storeId))) redirect('/login');
-
-  const data = Object.fromEntries(formData.entries());
-  const result = categorySchema.safeParse({ ...data, imageURL });
-
-  if (!result.success) return result.error.formErrors.fieldErrors;
-
   try {
+    if (!(await isAuthorized(storeId))) redirect('/login');
+
+    const data = Object.fromEntries(formData.entries());
+    const result = categorySchema.safeParse({ ...data, imageURL });
+    console.log(
+      '🟩🟪🟦-->  ~ esult.error.formErrors.fieldErrors:',
+      result.error.formErrors.fieldErrors
+    );
+
+    if (!result.success) return result.error.formErrors.fieldErrors;
+
     await db.category.create({
       data: {
         storeId,
@@ -37,7 +41,7 @@ export async function addCategory(
     });
   } catch (error) {
     console.error(error);
-    return { error: 'Error while trying to add the category' };
+    return { message: 'Error while trying to add the category' };
   }
 
   revalidatePath('/', 'layout');
@@ -66,7 +70,7 @@ export async function updateCategory(
     });
   } catch (error) {
     console.error(error);
-    return { error: 'Error while trying to update the category' };
+    return { message: 'Error while trying to update the category' };
   }
 
   revalidatePath('/', 'layout');

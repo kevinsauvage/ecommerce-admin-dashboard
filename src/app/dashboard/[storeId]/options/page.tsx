@@ -64,7 +64,7 @@ export default async function OptionsPage({
               <Sorting searchParams={searchParams} sortOptions={sortOptions} />
               <Button size="sm" className="h-8 gap-1">
                 <Link
-                  href={`/dashboard/${storeId}/products/new`}
+                  href={`/dashboard/${storeId}/options/new`}
                   className="flex items-center gap-1"
                 >
                   <PlusCircle className="h-3.5 w-3.5" />

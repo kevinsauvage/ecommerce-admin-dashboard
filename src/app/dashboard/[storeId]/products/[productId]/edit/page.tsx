@@ -6,6 +6,7 @@ import Heading from '@/components/Heading';
 import { getCategories } from '@/db/categories';
 import { getOptions } from '@/db/options';
 import { getProduct } from '@/db/products';
+import { CategoryTypeWithRelations } from '@/types';
 
 const getData = async (productId: string, storeId: string) => {
   return Promise.all([
@@ -15,7 +16,7 @@ const getData = async (productId: string, storeId: string) => {
       withImages: true,
       withVariants: true,
       withTags: true,
-      withCategory: true,
+      withCategories: true,
       withSeo: true,
     }),
     getCategories({
@@ -51,7 +52,7 @@ export default async function ProductEditPage({
       <BreadcrumbNav items={getBreadcrumbItems(storeId)} />
       <ProductForm
         product={JSON.parse(JSON.stringify(product))}
-        categories={categories.categories}
+        categories={categories.categories as CategoryTypeWithRelations[]}
         options={options.options}
       />
     </>

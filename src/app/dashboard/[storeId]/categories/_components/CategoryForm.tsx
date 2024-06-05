@@ -74,7 +74,7 @@ interface Action {
   description?: string[];
   imageURL?: string[];
   parentId?: string[];
-  error?: string;
+  message?: string;
 }
 
 export default function CategoryForm({
@@ -90,19 +90,19 @@ export default function CategoryForm({
   const { storeId } = useParams() as { storeId: string };
   const { toast } = useToast();
 
-  const [error, action] = useFormState<Action, FormData>(
-    category
-      ? updateCategory.bind(null, storeId, category.id, categoryImage)
-      : addCategory.bind(null, storeId, categoryImage),
-    {}
-  );
+  const actionFn = category
+    ? updateCategory.bind(null, storeId, category.id, categoryImage)
+    : addCategory.bind(null, storeId, categoryImage);
+
+  const [error, action] = useFormState<Action, FormData>(actionFn, {});
 
   useEffect(() => {
-    if (error?.error) {
+    console.log('🟩🟪🟦-->  ~ error:', error);
+    if (error?.message) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.error,
+        description: error.message,
       });
     }
   }, [error, toast]);
