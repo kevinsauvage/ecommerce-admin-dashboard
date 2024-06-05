@@ -25,12 +25,10 @@ export async function addCategory(
 
     const data = Object.fromEntries(formData.entries());
     const result = categorySchema.safeParse({ ...data, imageURL });
-    console.log(
-      '🟩🟪🟦-->  ~ esult.error.formErrors.fieldErrors:',
-      result.error.formErrors.fieldErrors
-    );
 
-    if (!result.success) return result.error.formErrors.fieldErrors;
+    if (!result.success) {
+      return result.error.formErrors.fieldErrors;
+    }
 
     await db.category.create({
       data: {

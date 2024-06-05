@@ -1,4 +1,3 @@
-/* eslint-disable react-perf/jsx-no-new-array-as-prop */
 'use client';
 
 import { Category } from '@prisma/client';
@@ -39,12 +38,8 @@ const categorySelectRecursive = (
   return categories.map((category) => {
     if (category.childCategories.length > 0) {
       return (
-        <>
-          <SelectItem
-            key={category.id}
-            value={category.id}
-            disabled={category.id === categoryId}
-          >
+        <div key={category.id}>
+          <SelectItem value={category.id} disabled={category.id === categoryId}>
             {category.name}
           </SelectItem>
           <SelectGroup className="ml-6">
@@ -53,7 +48,7 @@ const categorySelectRecursive = (
               categoryId
             )}
           </SelectGroup>
-        </>
+        </div>
       );
     } else {
       return (
@@ -96,8 +91,8 @@ export default function CategoryForm({
 
   const [error, action] = useFormState<Action, FormData>(actionFn, {});
 
+  console.log('🟩🟪🟦-->  ~ error:', error);
   useEffect(() => {
-    console.log('🟩🟪🟦-->  ~ error:', error);
     if (error?.message) {
       toast({
         variant: 'destructive',

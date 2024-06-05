@@ -42,6 +42,7 @@ export default function StoreSettingsForm({ store }: { store: Store }) {
     },
     FormData
   >(updateStore.bind(null, store.id, logo?.[0]), {});
+  console.log('🟩🟪🟦-->  ~ StoreSettingsForm ~ state:', state);
 
   useEffect(() => {
     if (state?.error) {
@@ -50,7 +51,7 @@ export default function StoreSettingsForm({ store }: { store: Store }) {
         title: 'Error',
         description: state.message,
       });
-    } else if (state.success) {
+    } else if (state?.success) {
       toast({
         variant: 'success',
         title: 'Success',
