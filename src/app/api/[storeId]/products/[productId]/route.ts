@@ -14,7 +14,7 @@ export async function GET(
     const isArchived = searchParams.get('isArchived') === 'true';
     const withVariants = searchParams.get('withVariants') === 'true';
     const withTags = searchParams.get('withTags') === 'true';
-    const withCategory = searchParams.get('withCategory') === 'true';
+    const withCategories = searchParams.get('withCategories') === 'true';
     const withSeo = searchParams.get('withSeo') === 'true';
 
     const product = getProduct({
@@ -24,7 +24,7 @@ export async function GET(
       isArchived,
       withImages: true,
       withTags,
-      withCategory,
+      withCategories,
       withSeo,
       withVariants,
     });

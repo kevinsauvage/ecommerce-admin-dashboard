@@ -12,7 +12,7 @@ const getQueryParams = (searchParams: URLSearchParams) => {
 
   const withVariants = searchParams.get('withVariants') === 'true';
   const withTags = searchParams.get('withTags') === 'true';
-  const withCategory = searchParams.get('withCategory') === 'true';
+  const withCategories = searchParams.get('withCategories') === 'true';
   const withSeo = searchParams.get('withSeo') === 'true';
   const withImages = searchParams.get('withImages') === 'true';
 
@@ -24,7 +24,7 @@ const getQueryParams = (searchParams: URLSearchParams) => {
     filter,
     withVariants,
     withTags,
-    withCategory,
+    withCategories,
     withSeo,
     withImages,
   };
@@ -44,7 +44,7 @@ export async function GET(
       sort,
       filter,
       withTags,
-      withCategory,
+      withCategories,
       withVariants,
       withSeo,
       withImages,
@@ -63,7 +63,7 @@ export async function GET(
       withImages,
       withVariants,
       withTags,
-      withCategory,
+      withCategories,
       withSeo,
     });
 
