@@ -15,9 +15,6 @@ type GetCategoriesParams = {
   pageSize: number;
   query?: string;
   sort?: string;
-  onlyParentCategories?: boolean;
-  withChildCategories?: boolean;
-  withParentCategories?: boolean;
   whereExtra?: Prisma.CategoryWhereInput;
 };
 
@@ -28,43 +25,16 @@ export const getCategories = async (params: GetCategoriesParams) => {
     pageSize = 10,
     query = '',
     sort = 'newest',
-    onlyParentCategories,
-    withChildCategories,
-    withParentCategories,
     whereExtra,
   } = params || {};
 
   const where = {
     storeId,
     name: { contains: query, mode: Prisma.QueryMode.insensitive },
-    parentId: onlyParentCategories ? { equals: null } : undefined,
     ...whereExtra,
   };
 
-  const include = {
-    childCategories: withChildCategories
-      ? {
-          include: {
-            childCategories: {
-              include: {
-                childCategories: true,
-              },
-            },
-          },
-        }
-      : undefined,
-    parent: withParentCategories
-      ? {
-          include: {
-            parent: {
-              include: {
-                parent: true,
-              },
-            },
-          },
-        }
-      : undefined,
-  };
+  const include = {};
 
   const [categories, count] = await Promise.all([
     db.category.findMany({
@@ -83,40 +53,14 @@ export const getCategories = async (params: GetCategoriesParams) => {
 type GetCategoryParams = {
   storeId: string;
   categoryId: string;
-  withChildCategories?: boolean;
-  withParentCategory?: boolean;
 };
 
 export const getCategory = async (params: GetCategoryParams) => {
-  const { storeId, categoryId, withChildCategories, withParentCategory } =
-    params;
+  const { storeId, categoryId } = params;
 
   const where = { id: categoryId, storeId };
 
-  const include = {
-    childCategories: withChildCategories
-      ? {
-          include: {
-            childCategories: {
-              include: {
-                childCategories: true,
-              },
-            },
-          },
-        }
-      : undefined,
-    parent: withParentCategory
-      ? {
-          include: {
-            parent: {
-              include: {
-                parent: true,
-              },
-            },
-          },
-        }
-      : undefined,
-  };
+  const include = {};
 
   return await db.category.findUnique({ where, include });
 };

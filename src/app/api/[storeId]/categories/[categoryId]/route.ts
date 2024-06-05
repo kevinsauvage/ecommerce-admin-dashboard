@@ -12,7 +12,6 @@ export async function GET(
     const category = await getCategory({
       storeId,
       categoryId,
-      withChildCategories: true,
     });
 
     return NextResponse.json(category);

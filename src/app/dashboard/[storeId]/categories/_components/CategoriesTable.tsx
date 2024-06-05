@@ -1,6 +1,7 @@
 /* eslint-disable react-perf/jsx-no-new-array-as-prop */
 'use client';
 
+import { Category } from '@prisma/client';
 import { Copy, Edit, MoreVerticalIcon, Trash } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -25,12 +26,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
-import { CategoryTypeWithRelations } from '@/types';
 
 export default function CategoriesTable({
   categories = [],
 }: {
-  categories: Array<CategoryTypeWithRelations>;
+  categories: Array<Category>;
 }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState<boolean>(false);
@@ -71,7 +71,6 @@ export default function CategoriesTable({
           <TableRow>
             <TableHead className="hidden sm:table-cell">Image</TableHead>
             <TableHead>Name</TableHead>
-            <TableHead className="hidden sm:table-cell">Child</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead className="text-end">
               <span className="sr-only">Actions</span>
@@ -90,22 +89,8 @@ export default function CategoriesTable({
                   width={64}
                 />
               </TableCell>
-              <TableCell>
-                {category?.childCategories &&
-                category?.childCategories?.length > 0 ? (
-                  <Link
-                    href={`/dashboard/${storeId}/categories/${category.id}`}
-                    className="text-blue-600 dark:text-blue-400"
-                  >
-                    {category.name}
-                  </Link>
-                ) : (
-                  category.name
-                )}
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">
-                {category.childCategories?.length}
-              </TableCell>
+              <TableCell>{category.name}</TableCell>
+
               <TableCell>
                 <Date date={category.createdAt} />
               </TableCell>

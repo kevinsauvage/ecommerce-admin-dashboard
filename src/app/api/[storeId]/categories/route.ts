@@ -7,18 +7,12 @@ const getQueryParams = (searchParams: URLSearchParams) => {
   const pageSize = Number(searchParams.get('pageSize')) || 10;
   const query = searchParams.get('query') || '';
   const sort = searchParams.get('sort') || 'newest';
-  const withChildCategories =
-    searchParams.get('withChildCategories') === 'true';
-  const onlyParentCategories =
-    searchParams.get('onlyParentCategories') === 'true';
 
   return {
     page,
     pageSize,
     query,
     sort,
-    withChildCategories,
-    onlyParentCategories,
   };
 };
 
@@ -29,8 +23,7 @@ export async function GET(
   try {
     const { storeId } = params || {};
     const { searchParams } = new URL(req.url);
-    const { page, pageSize, query, sort, onlyParentCategories } =
-      getQueryParams(searchParams);
+    const { page, pageSize, query, sort } = getQueryParams(searchParams);
 
     const { categories, count } = await getCategories({
       storeId,
@@ -38,7 +31,6 @@ export async function GET(
       pageSize,
       query,
       sort,
-      onlyParentCategories,
     });
 
     return NextResponse.json({ categories, count });

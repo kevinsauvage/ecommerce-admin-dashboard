@@ -29,7 +29,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Toggle } from '@/components/ui/toggle';
 import { useToast } from '@/components/ui/use-toast';
-import { CategoryTypeWithRelations } from '@/types';
 
 type ProductWithRelations = Prisma.ProductGetPayload<{
   include: {
@@ -474,7 +473,7 @@ function CategorySelection({
   setSelectedCategories,
   error,
 }: {
-  categories: Array<CategoryTypeWithRelations>;
+  categories: Array<Category>;
   selectedCategories?: Category[];
   error: ActionResponse;
   setSelectedCategories: (categories: Category[]) => void;
@@ -633,7 +632,7 @@ export default function ProductForm({
   options,
 }: {
   product?: ProductWithRelations;
-  categories: Array<CategoryTypeWithRelations>;
+  categories: Array<Category>;
   options: Array<OptionWithValues>;
 }) {
   const [productImages, setProductImages] = useState<Array<{ url: string }>>(
@@ -668,7 +667,9 @@ export default function ProductForm({
           variants,
           selectedCategories.map((category) => category.id)
         ),
-    {}
+    {
+      message: '',
+    }
   );
 
   useEffect(() => {
@@ -678,6 +679,8 @@ export default function ProductForm({
         title: 'Error',
         description: error.error,
       });
+    } else if (error?.message === '') {
+      window.scrollTo(0, 0);
     }
   }, [error, toast]);
 

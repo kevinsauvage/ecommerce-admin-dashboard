@@ -45,9 +45,6 @@ model Category {
   name            String
   description     String     @default("")
   products        Product[]
-  parentId        String?
-  parent          Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
-  childCategories Category[] @relation("CategoryToCategory") // One-to-many relation with Category
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

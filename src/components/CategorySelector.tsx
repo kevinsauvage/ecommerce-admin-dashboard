@@ -7,75 +7,13 @@ import { KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Badge } from './ui/badge';
 import { Command, CommandGroup, CommandItem, CommandList } from './ui/command';
-import { CategoryTypeWithRelations } from '@/types';
-
-const categorySelectRecursive = (
-  categories: Array<CategoryTypeWithRelations>,
-  setInputValue: (value: string) => void,
-  handleSelect: (value: Category) => void,
-  selected: Category[]
-) => {
-  return categories.map((category) => {
-    if (category.childCategories.length > 0) {
-      return (
-        <>
-          <CommandGroup className="h-full overflow-auto" key={category.id}>
-            <CommandItem
-              onMouseDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-              onSelect={() => {
-                setInputValue('');
-                handleSelect(category);
-              }}
-              className={'cursor-pointer'}
-              disabled={
-                selected.find((s) => s.id === category.id) !== undefined
-              }
-            >
-              {category.name}
-            </CommandItem>
-          </CommandGroup>
-          <div className="ml-4">
-            {categorySelectRecursive(
-              category.childCategories as Array<CategoryTypeWithRelations>,
-              setInputValue,
-              handleSelect,
-              selected
-            )}
-          </div>
-        </>
-      );
-    } else {
-      return (
-        <CommandGroup className="h-full overflow-auto" key={category.id}>
-          <CommandItem
-            onMouseDown={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onSelect={() => {
-              setInputValue('');
-              handleSelect(category);
-            }}
-            className={'cursor-pointer'}
-            disabled={selected.find((s) => s.id === category.id) !== undefined}
-          >
-            {category.name}
-          </CommandItem>
-        </CommandGroup>
-      );
-    }
-  });
-};
 
 export default function CategorySelector({
   categories,
   selectedCategories = [],
   onChange,
 }: {
-  categories: Array<CategoryTypeWithRelations>;
+  categories: Array<Category>;
   selectedCategories: Array<Category>;
   onChange: (categories: Category[]) => void;
 }) {
@@ -156,15 +94,29 @@ export default function CategorySelector({
         <CommandList>
           {open && categories.length > 0 ? (
             <div className="absolute top-0 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in">
-              {categorySelectRecursive(
-                categories,
-                setInputValue,
-                (value) => {
-                  setInputValue('');
-                  setSelected((prev) => [...prev, value]);
-                },
-                selected
-              )}
+              {categories.map((category) => (
+                <CommandGroup
+                  className="h-full overflow-auto"
+                  key={category.id}
+                >
+                  <CommandItem
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onSelect={() => {
+                      setInputValue('');
+                      setSelected((prev) => [...prev, category]);
+                    }}
+                    className={'cursor-pointer'}
+                    disabled={
+                      selected.find((s) => s.id === category.id) !== undefined
+                    }
+                  >
+                    {category.name}
+                  </CommandItem>
+                </CommandGroup>
+              ))}
             </div>
           ) : null}
         </CommandList>

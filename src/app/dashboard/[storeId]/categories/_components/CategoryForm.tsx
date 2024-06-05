@@ -20,49 +20,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { CategoryTypeWithRelations } from '@/types';
-
-const categorySelectRecursive = (
-  categories: Array<CategoryTypeWithRelations>,
-  categoryId?: string | null
-) => {
-  return categories.map((category) => {
-    if (category.childCategories.length > 0) {
-      return (
-        <div key={category.id}>
-          <SelectItem value={category.id} disabled={category.id === categoryId}>
-            {category.name}
-          </SelectItem>
-          <SelectGroup className="ml-6">
-            {categorySelectRecursive(
-              category.childCategories as Array<CategoryTypeWithRelations>,
-              categoryId
-            )}
-          </SelectGroup>
-        </div>
-      );
-    } else {
-      return (
-        <SelectItem
-          key={category.id}
-          value={category.id}
-          disabled={category.id === categoryId}
-        >
-          {category.name}
-        </SelectItem>
-      );
-    }
-  });
-};
 
 interface Action {
   name?: string[];
@@ -72,13 +30,7 @@ interface Action {
   message?: string;
 }
 
-export default function CategoryForm({
-  category,
-  categories,
-}: {
-  category?: Category;
-  categories: Array<CategoryTypeWithRelations>;
-}) {
+export default function CategoryForm({ category }: { category?: Category }) {
   const [categoryImage, setCategoryImage] = useState<string | null | undefined>(
     category?.imageURL
   );
@@ -91,7 +43,6 @@ export default function CategoryForm({
 
   const [error, action] = useFormState<Action, FormData>(actionFn, {});
 
-  console.log('🟩🟪🟦-->  ~ error:', error);
   useEffect(() => {
     if (error?.message) {
       toast({
@@ -104,73 +55,51 @@ export default function CategoryForm({
 
   return (
     <Form action={action}>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="col-span-2 flex flex-col gap-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Category Details</CardTitle>
-              <CardDescription>
-                Fill in the details of the category
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              <FormInputWrapper>
-                <Label htmlFor="label">Name</Label>
-                <Input
-                  type="text"
-                  id="name"
-                  name="name"
-                  placeholder="Category name"
-                  defaultValue={category?.name}
-                />
-                <FormErrorMessage message={error?.name} />
-              </FormInputWrapper>
-              <FormInputWrapper>
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  type="text"
-                  id="description"
-                  name="description"
-                  placeholder="Category description"
-                  defaultValue={category?.description}
-                />
-              </FormInputWrapper>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Category Image</CardTitle>
-              <CardDescription>
-                Upload an image for the category
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ImageUpload
-                value={categoryImage ? [categoryImage] : []}
-                onChange={(url) => setCategoryImage(url)}
-                onRemove={() => setCategoryImage(undefined)}
+      <div className="grid grid-cols-1 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Category Details</CardTitle>
+            <CardDescription>
+              Fill in the details of the category
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            <FormInputWrapper>
+              <Label htmlFor="label">Name</Label>
+              <Input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Category name"
+                defaultValue={category?.name}
               />
-            </CardContent>
-          </Card>
-        </div>
-        <div className="col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Parent Category</CardTitle>
-              <CardDescription>Select the parent category</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              <Select name="parentId">
-                <SelectTrigger>
-                  <SelectValue placeholder="Parent category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categorySelectRecursive(categories, category?.id)}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-        </div>
+              <FormErrorMessage message={error?.name} />
+            </FormInputWrapper>
+            <FormInputWrapper>
+              <Label htmlFor="description">Description</Label>
+              <Input
+                type="text"
+                id="description"
+                name="description"
+                placeholder="Category description"
+                defaultValue={category?.description}
+              />
+            </FormInputWrapper>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Category Image</CardTitle>
+            <CardDescription>Upload an image for the category</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ImageUpload
+              value={categoryImage ? [categoryImage] : []}
+              onChange={(url) => setCategoryImage(url)}
+              onRemove={() => setCategoryImage(undefined)}
+            />
+          </CardContent>
+        </Card>
       </div>
       <SubmitButton />
     </Form>
