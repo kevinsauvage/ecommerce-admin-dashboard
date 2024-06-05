@@ -493,10 +493,8 @@ function CategorySelection({
             setSelectedCategories(categories);
           }}
         />
-      </CardContent>
-      <CardFooter>
         <FormErrorMessage message={error?.categories} />
-      </CardFooter>
+      </CardContent>
     </Card>
   );
 }
@@ -673,7 +671,6 @@ export default function ProductForm({
     {}
   );
 
-  console.log('🟩🟪🟦-->  ~ useEffect ~ error:', error);
   useEffect(() => {
     if (error?.message) {
       toast({
