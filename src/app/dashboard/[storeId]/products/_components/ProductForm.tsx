@@ -648,29 +648,26 @@ export default function ProductForm({
   const { toast } = useToast();
   const { storeId } = useParams() as { storeId: string };
 
-  const [error, action] = useFormState<ActionResponse, FormData>(
-    product
-      ? updateProduct.bind(
-          null,
-          storeId,
-          product.id,
-          productImages,
-          tags,
-          variants,
-          selectedCategories.map((category) => category.id)
-        )
-      : addProduct.bind(
-          null,
-          storeId,
-          productImages,
-          tags,
-          variants,
-          selectedCategories.map((category) => category.id)
-        ),
-    {
-      message: '',
-    }
-  );
+  const actionFn = product
+    ? updateProduct.bind(
+        null,
+        storeId,
+        product.id,
+        productImages,
+        tags,
+        variants,
+        selectedCategories.map((category) => category.id)
+      )
+    : addProduct.bind(
+        null,
+        storeId,
+        productImages,
+        tags,
+        variants,
+        selectedCategories.map((category) => category.id)
+      );
+
+  const [error, action] = useFormState<ActionResponse, FormData>(actionFn, {});
 
   useEffect(() => {
     if (error?.message) {
