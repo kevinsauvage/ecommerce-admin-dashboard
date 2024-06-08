@@ -42,7 +42,6 @@ export default function StoreSettingsForm({ store }: { store: Store }) {
     },
     FormData
   >(updateStore.bind(null, store.id, logo?.[0]), {});
-  console.log('🟩🟪🟦-->  ~ StoreSettingsForm ~ state:', state);
 
   useEffect(() => {
     if (state?.error) {

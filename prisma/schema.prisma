@@ -29,6 +29,7 @@ model Store {
   users       User[]
   tags        Tag[]
   options     Option[]
+  navigations Navigation[]
 
   createdAt DateTime @default(now()) // Auto-generated timestamp
   updatedAt DateTime @updatedAt // Auto-updated timestamp
@@ -41,6 +42,7 @@ model Category {
   id              String     @id @default(uuid())
   storeId         String // Foreign key to Store
   store           Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  navigationItems NavigationItem[]
   imageURL        String?
   name            String
   description     String     @default("")
@@ -219,4 +221,36 @@ model User {
 
   @@index([email])
   @@index([role])
+}
+
+model Navigation {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String  @unique
+  items     NavigationItem[]
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NavigationItem {
+  id            String      @id @default(uuid())
+  navigationId  String
+  navigation    Navigation  @relation(fields: [navigationId], references: [id], onDelete: Cascade)
+  items         NavigationItem[] @relation("ParentChild")
+  parentId      String?
+  parent        NavigationItem?  @relation("ParentChild", fields: [parentId], references: [id])
+  category      Category?        @relation(fields: [categoryId], references: [id])
+  categoryId    String?
+
+  name          String
+  url           String
+  order         Int        @default(0)
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([navigationId])
 }

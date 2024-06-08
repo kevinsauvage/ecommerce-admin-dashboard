@@ -16,10 +16,10 @@ export default function FormErrorMessage({
         )}
       >
         {message.map((msg, index) => (
-          <>
+          <div key={msg + index} className="flex items-center gap-1">
             <LucideInfo className="h-3.5 w-3.5 inline-block" />
             <p key={index}>{msg}</p>
-          </>
+          </div>
         ))}
       </div>
     );

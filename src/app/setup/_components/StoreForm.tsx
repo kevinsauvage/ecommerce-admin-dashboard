@@ -18,8 +18,6 @@ export default function StoreForm() {
     FormData
   >(addStore, {});
 
-  console.log('🟩🟪🟦-->  ~ StoreForm ~ error:', error);
-
   return (
     <Card>
       <CardContent>

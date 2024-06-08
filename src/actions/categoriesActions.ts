@@ -34,7 +34,6 @@ export async function addCategory(
       data: {
         storeId,
         ...result.data,
-        parentId: result.data.parentId || null,
       },
     });
   } catch (error) {

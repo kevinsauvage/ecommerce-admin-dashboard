@@ -63,6 +63,12 @@ export default function MainNav() {
       icon: <CreditCard />,
     },
     {
+      label: 'Navigation',
+      path: `/dashboard/${params.storeId}/navigation`,
+      active: pathname === `/dashboard/${params.storeId}/navigation`,
+      icon: <Package />,
+    },
+    {
       label: 'Settings',
       path: `/dashboard/${params.storeId}/settings`,
       active: pathname === `/dashboard/${params.storeId}/settings`,
