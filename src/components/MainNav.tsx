@@ -46,7 +46,7 @@ export default function MainNav() {
       path: `/dashboard/${storeId}/products`,
       collapsible: [
         {
-          label: 'All Products',
+          label: 'Catalog',
           path: `/dashboard/${storeId}/products`,
           active: pathname === `/dashboard/${storeId}/products`,
           icon: <Package />,
