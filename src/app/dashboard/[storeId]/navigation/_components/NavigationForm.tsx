@@ -576,7 +576,7 @@ export default function NavigationForm({
                   placeholder="main-navigation"
                   defaultValue={navigation?.name}
                 />
-                <FormErrorMessage message={error?.name} />
+                <FormErrorMessage message={error?.slug} />
               </FormInputWrapper>
             </CardContent>
           </Card>
