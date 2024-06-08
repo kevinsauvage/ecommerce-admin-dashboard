@@ -1,20 +1,11 @@
-import db from '@/db/db';
+import { redirect } from 'next/navigation';
+
 import { getSession } from '@/lib/auth';
 
 export default async function isAuthorized(storeId: string) {
   const session = await getSession();
 
   if (!session || !storeId) {
-    return false;
+    return redirect('/login');
   }
-
-  const storeByUserId = await db.store.findUnique({
-    where: { id: storeId, userId: session.user.id },
-  });
-
-  if (storeByUserId) {
-    return true;
-  }
-
-  return false;
 }
