@@ -132,22 +132,6 @@ export default function StoreSettingsForm({ store }: { store: Store }) {
               </FormInputWrapper>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>image</CardTitle>
-              <CardDescription>Upload an image for the store</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              <Label htmlFor="logo">Image</Label>
-              <ImageUpload
-                onChange={(url) => setLogo([url])}
-                value={logo}
-                onRemove={() => setLogo([])}
-                imageClassName="object-contain"
-              />
-              <FormErrorMessage message={state?.logo} />
-            </CardContent>
-          </Card>
         </div>
         <div className="col-span-1 flex flex-col gap-8">
           <Card>
@@ -191,6 +175,22 @@ export default function StoreSettingsForm({ store }: { store: Store }) {
                 />
                 <FormErrorMessage message={state?.twitter} />
               </FormInputWrapper>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Logo</CardTitle>
+              <CardDescription>Upload a logo for the store</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <Label htmlFor="logo">Logo</Label>
+              <ImageUpload
+                onChange={(url) => setLogo([url])}
+                value={logo}
+                onRemove={() => setLogo([])}
+                imageClassName="object-contain"
+              />
+              <FormErrorMessage message={state?.logo} />
             </CardContent>
           </Card>
         </div>
