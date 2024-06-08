@@ -105,7 +105,7 @@ export default function ProductsTable({
                   alt="Product image"
                   className="aspect-square rounded-md object-cover"
                   height={64}
-                  src={product.images[0]?.url ?? '/placeholder.svg'}
+                  src={product.images[0]?.url ?? '/images/placeholder.svg'}
                   width={64}
                 />
               </TableCell>

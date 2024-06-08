@@ -23,11 +23,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 
 interface Action {
-  name?: string[];
-  description?: string[];
-  imageURL?: string[];
-  parentId?: string[];
-  message?: string;
+  [key: string]: string | string[] | undefined;
 }
 
 export default function CategoryForm({ category }: { category?: Category }) {
@@ -37,11 +33,10 @@ export default function CategoryForm({ category }: { category?: Category }) {
   const { storeId } = useParams() as { storeId: string };
   const { toast } = useToast();
 
-  const actionFn = category
-    ? updateCategory.bind(null, storeId, category.id, categoryImage)
-    : addCategory.bind(null, storeId, categoryImage);
-
-  const [error, action] = useFormState<Action, FormData>(actionFn, {});
+  const [error, action] = useFormState<Action, FormData>(
+    category ? updateCategory : addCategory,
+    {}
+  );
 
   useEffect(() => {
     if (error?.message) {
@@ -55,6 +50,9 @@ export default function CategoryForm({ category }: { category?: Category }) {
 
   return (
     <Form action={action}>
+      <input type="hidden" name="storeId" value={storeId} />
+      <input type="hidden" name="categoryId" value={category?.id} />
+      <input type="hidden" name="imageURL" value={category?.imageURL || ''} />
       <div className="grid grid-cols-1 gap-8">
         <Card>
           <CardHeader>

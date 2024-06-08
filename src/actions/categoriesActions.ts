@@ -2,42 +2,24 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { z } from 'zod';
 
 import isAuthorized from './_utils/isAuthorized';
 import db from '@/db/db';
+import { CategorySchema } from '@/zod/schemas/Category';
 
-const categorySchema = z.object({
-  name: z.string().min(1, { message: 'Please enter a name' }),
-  description: z.string().optional(),
-  imageURL: z.string().optional(),
-  parentId: z.string().optional(),
-});
+export async function addCategory(previousState: unknown, formData: FormData) {
+  const data = Object.fromEntries(formData.entries());
+  const storeId = data.storeId as string;
+  await isAuthorized(storeId);
 
-export async function addCategory(
-  storeId: string,
-  imageURL: string | null | undefined,
-  previousState: unknown,
-  formData: FormData
-) {
   try {
-    if (!(await isAuthorized(storeId))) redirect('/login');
+    const result = CategorySchema.safeParse(data);
 
-    const data = Object.fromEntries(formData.entries());
-    const result = categorySchema.safeParse({ ...data, imageURL });
+    if (!result.success) return result.error.formErrors.fieldErrors;
 
-    if (!result.success) {
-      return result.error.formErrors.fieldErrors;
-    }
-
-    await db.category.create({
-      data: {
-        storeId,
-        ...result.data,
-      },
-    });
+    await db.category.create({ data: { ...result.data, storeId } });
   } catch (error) {
-    console.error(error);
+    console.error('Error while trying to add the category:', error);
     return { message: 'Error while trying to add the category' };
   }
 
@@ -46,27 +28,26 @@ export async function addCategory(
 }
 
 export async function updateCategory(
-  storeId: string,
-  categoryId: string,
-  imageURL: string | null | undefined,
   previousState: unknown,
   formData: FormData
 ) {
-  if (!(await isAuthorized(storeId))) redirect('/login');
-  if (!categoryId) redirect(`/dashboard/${storeId}/categories`);
-
   const data = Object.fromEntries(formData.entries());
-  const result = categorySchema.safeParse({ ...data, imageURL });
+  const storeId = data.storeId as string;
+  const categoryId = data.categoryId as string;
 
-  if (!result.success) return result.error.formErrors.fieldErrors;
+  await isAuthorized(storeId);
 
   try {
-    await db.category.update({
-      where: { id: categoryId },
-      data: { ...result.data },
-    });
+    if (!categoryId) redirect(`/dashboard/${storeId}/categories`);
+
+    const result = CategorySchema.safeParse(data);
+
+    if (!result.success) return result.error.formErrors.fieldErrors;
+
+    const where = { id: categoryId, storeId };
+    await db.category.update({ where, data: result.data });
   } catch (error) {
-    console.error(error);
+    console.error('Error while trying to update the category:', error);
     return { message: 'Error while trying to update the category' };
   }
 
@@ -75,8 +56,17 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(categoryId: string, storeId: string) {
-  if (!(await isAuthorized(storeId)) || !categoryId) redirect('/login');
-  await db.category.delete({ where: { id: categoryId } });
+  try {
+    await isAuthorized(storeId);
+
+    if (!categoryId) redirect(`/dashboard/${storeId}/categories`);
+
+    await db.category.delete({ where: { id: categoryId } });
+  } catch (error) {
+    console.error('Error while trying to delete the category:', error);
+    return { message: 'Error while trying to delete the category' };
+  }
+
   revalidatePath('/', 'layout');
   redirect(`/dashboard/${storeId}/categories`);
 }
