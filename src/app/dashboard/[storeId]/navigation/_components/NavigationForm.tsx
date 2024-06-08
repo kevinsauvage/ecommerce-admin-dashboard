@@ -49,9 +49,7 @@ import { cn } from '@/lib/utils';
 import { Navigation, NavigationInputItem, NavigationItem } from '@/types';
 
 interface Action {
-  name?: string[];
-  values?: string[];
-  error?: string;
+  [key: string]: string | Array<string> | undefined;
 }
 
 const renderRecursive = (
