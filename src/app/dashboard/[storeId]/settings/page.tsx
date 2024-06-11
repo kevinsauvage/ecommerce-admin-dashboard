@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 
 import StoreSettingsForm from './_components/SettingForm';
 import Heading from '@/components/Heading';
-import db from '@/db/db';
+import db from '@/db';
 
 export default async function settings({
   params,

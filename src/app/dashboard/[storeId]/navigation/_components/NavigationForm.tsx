@@ -223,8 +223,8 @@ export default function NavigationForm({
 
   const [error, action] = useFormState<Action, FormData>(
     navigation
-      ? updateNavigation.bind(null, storeId, navigation.id, navigationItems)
-      : addNavigation.bind(null, storeId, navigationItems),
+      ? updateNavigation.bind(null, navigationItems)
+      : addNavigation.bind(null, navigationItems),
     {}
   );
 
@@ -411,6 +411,9 @@ export default function NavigationForm({
 
   return (
     <Form action={action}>
+      <input type="hidden" name="storeId" value={storeId} />
+      <input type="hidden" name="navigationId" value={navigation?.id} />
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="col-span-1 lg:col-span-2 flex flex-col gap-8">
           <Card>

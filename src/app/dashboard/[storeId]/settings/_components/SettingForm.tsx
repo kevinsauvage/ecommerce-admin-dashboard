@@ -21,27 +21,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 
+type ReturnType = {
+  success?: boolean;
+  error?: boolean;
+  message?: string;
+  logo?: string | Array<string> | undefined;
+  name?: string | Array<string> | undefined;
+  description?: string | Array<string> | undefined;
+  address?: string | Array<string> | undefined;
+  phone?: string | Array<string> | undefined;
+  email?: string | Array<string> | undefined;
+  facebook?: string | Array<string> | undefined;
+  instagram?: string | Array<string> | undefined;
+  twitter?: string | Array<string> | undefined;
+};
+
 export default function StoreSettingsForm({ store }: { store: Store }) {
   const [logo, setLogo] = useState(store?.logo ? [store.logo] : []);
   const { toast } = useToast();
 
-  const [state, action] = useFormState<
-    {
-      success?: boolean;
-      error?: boolean;
-      message?: string;
-      logo?: string | Array<string> | undefined;
-      name?: string | Array<string> | undefined;
-      description?: string | Array<string> | undefined;
-      address?: string | Array<string> | undefined;
-      phone?: string | Array<string> | undefined;
-      email?: string | Array<string> | undefined;
-      facebook?: string | Array<string> | undefined;
-      instagram?: string | Array<string> | undefined;
-      twitter?: string | Array<string> | undefined;
-    },
-    FormData
-  >(updateStore.bind(null, store.id, logo?.[0]), {});
+  const [state, action] = useFormState<ReturnType, FormData>(updateStore, {});
 
   useEffect(() => {
     if (state?.error) {
@@ -61,6 +60,8 @@ export default function StoreSettingsForm({ store }: { store: Store }) {
 
   return (
     <Form action={action}>
+      <input type="hidden" name="storeId" value={store.id} />
+      <input type="hidden" name="logo" value={logo[0]} />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="col-span-2 flex flex-col gap-8">
           <Card>

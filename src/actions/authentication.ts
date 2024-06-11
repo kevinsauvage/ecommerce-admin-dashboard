@@ -3,27 +3,19 @@
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { z } from 'zod';
 
-import db from '@/db/db';
+import db from '@/db';
 import { encrypt } from '@/lib/auth';
 import hashPassword from '@/lib/hashPassword';
+import { loginSchema, registerSchema } from '@/zod/schemas/authentication';
 
 const expiresIn = process.env.SESSION_EXPIRATION as string;
 
-const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, {
-    message: 'Password must be at least 8 characters long',
-  }),
-});
-
 export async function register(previousState: unknown, formData: FormData) {
   try {
-    const result = registerSchema.safeParse(
-      Object.fromEntries(formData.entries())
-    );
+    const data = Object.fromEntries(formData.entries());
 
+    const result = registerSchema.safeParse(data);
     if (!result.success) return result.error.formErrors.fieldErrors;
 
     const { email, password } = result.data;
@@ -41,46 +33,42 @@ export async function register(previousState: unknown, formData: FormData) {
       ? { email: 'Email is already registered' }
       : { error: 'Something went wrong, please try again' };
   }
+
   redirect('/login');
 }
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
-
 export async function login(previousState: unknown, formData: FormData) {
-  const data = Object.fromEntries(formData.entries());
-  const result = loginSchema.safeParse(data);
+  let store;
 
-  if (!result.success) return result.error.formErrors.fieldErrors;
+  try {
+    const data = Object.fromEntries(formData.entries());
 
-  const { email, password } = result.data || {};
+    const result = loginSchema.safeParse(data);
+    if (!result.success) return result.error.formErrors.fieldErrors;
 
-  const user = await db.user.findUnique({ where: { email } });
+    const { email, password } = result.data || {};
 
-  if (!user) return { email: 'Email is not registered' };
+    const user = await db.user.findUnique({ where: { email } });
+    if (!user) return { email: 'Email is not registered' };
 
-  const hashedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword(password);
+    if (hashedPassword !== user.password) return { password: 'Wrong password' };
 
-  if (hashedPassword !== user.password) return { password: 'Wrong password' };
+    const expires = new Date(Date.now() + Number(expiresIn));
+    const session = await encrypt({
+      expires,
+      user: { id: user.id, email, role: user.role },
+    });
+    cookies().set('session', session, { expires, httpOnly: true });
 
-  const expires = new Date(Date.now() + Number(expiresIn));
-
-  const session = await encrypt({
-    expires,
-    user: { id: user.id, email, role: user.role },
-  });
-
-  cookies().set('session', session, { expires, httpOnly: true });
-
-  const store = await db.store.findFirst({ where: { userId: user.id } });
-
-  if (store) {
-    redirect(`/dashboard/${store.id}`);
-  } else {
-    redirect('/setup');
+    store = await db.store.findFirst({ where: { userId: user.id } });
+  } catch (error: unknown) {
+    console.error('loginAction Error:', error);
+    return { error: 'Something went wrong, please try again' };
   }
+
+  if (store) redirect(`/dashboard/${store.id}`);
+  else redirect('/setup');
 }
 
 export async function logout() {

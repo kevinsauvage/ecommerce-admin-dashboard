@@ -1,14 +1,14 @@
 import { CreditCard, DollarSign, Package } from 'lucide-react';
 
+import Heading from '@/components/Heading';
+import Overview from '@/components/Overview';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   getGraphRevenue,
   getSalesCount,
   getStockCount,
   getTotalRevenue,
-} from '@/actions/dashboard';
-import Heading from '@/components/Heading';
-import Overview from '@/components/Overview';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from '@/db/dashboard';
 import { formatCurrency } from '@/lib/formatters';
 
 interface DashboardPageProps {

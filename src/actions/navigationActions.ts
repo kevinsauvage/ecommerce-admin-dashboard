@@ -3,33 +3,14 @@
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { z } from 'zod';
 
 import isAuthorized from './_utils/isAuthorized';
-import db from '@/db/db';
+import db from '@/db';
 import { NavigationInputItem } from '@/types';
-
-type ZodNavigationItem = {
-  name: string;
-  url: string;
-  items: ZodNavigationItem[];
-};
-
-const navigationItemSchema: z.ZodSchema<ZodNavigationItem> = z.lazy(() =>
-  z.object({
-    name: z.string().min(1, { message: 'Name is required' }),
-    url: z.string().min(1, { message: 'URL is required' }),
-    items: z.array(z.lazy(() => navigationItemSchema)),
-  })
-);
-
-const navigationArraySchema = z.array(navigationItemSchema);
-
-const NavigationSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required' }),
-  slug: z.string().min(1, { message: 'Slug is required' }),
-  items: navigationArraySchema,
-});
+import {
+  NavigationArraySchema,
+  NavigationSchema,
+} from '@/zod/schemas/Navigation';
 
 async function createNavigationItems(
   navigationId: string,
@@ -55,23 +36,24 @@ async function createNavigationItems(
 }
 
 export async function addNavigation(
-  storeId: string,
   navigationItem: NavigationInputItem[],
   previousState: unknown,
   formData: FormData
 ) {
-  if (!(await isAuthorized(storeId))) redirect('/login');
-
   const data = Object.fromEntries(formData.entries());
-  const result = NavigationSchema.safeParse({ ...data, items: navigationItem });
 
+  const storeId = data.storeId as string;
+  await isAuthorized(storeId);
+
+  const result = NavigationSchema.safeParse(data);
   if (!result.success) return result.error.formErrors.fieldErrors;
 
-  const { name, slug } = result.data;
+  const itemsResult = NavigationArraySchema.safeParse(navigationItem);
+  if (!itemsResult.success) return itemsResult.error.formErrors.fieldErrors;
 
   try {
     const navigation = await db.navigation.create({
-      data: { storeId, name, slug },
+      data: { storeId, ...result.data },
     });
 
     await createNavigationItems(navigation.id, navigationItem);
@@ -89,25 +71,26 @@ export async function addNavigation(
 }
 
 export async function updateNavigation(
-  storeId: string,
-  navigationId: string,
   navigationItem: NavigationInputItem[],
   previousState: unknown,
   formData: FormData
 ) {
-  if (!(await isAuthorized(storeId))) redirect('/login');
-  if (!navigationId) redirect(`/dashboard/${storeId}/navigation`);
-
   const data = Object.fromEntries(formData.entries());
-  const result = NavigationSchema.safeParse({ ...data, items: navigationItem });
 
+  const storeId = data.storeId as string;
+  await isAuthorized(storeId);
+
+  const result = NavigationSchema.safeParse(data);
   if (!result.success) return result.error.formErrors.fieldErrors;
 
-  const { name, slug } = result.data;
+  const itemsResult = NavigationArraySchema.safeParse(navigationItem);
+  if (!itemsResult.success) return itemsResult.error.formErrors.fieldErrors;
+
   try {
+    const navigationId = data.navigationId as string;
     await db.navigation.update({
       where: { id: navigationId },
-      data: { name, slug, items: { deleteMany: {} } },
+      data: { ...result.data, items: { deleteMany: {} } },
     });
 
     await createNavigationItems(navigationId, navigationItem);
@@ -125,8 +108,15 @@ export async function updateNavigation(
 }
 
 export async function deleteNavigation(navigationId: string, storeId: string) {
-  if (!(await isAuthorized(storeId)) || !navigationId) redirect('/login');
-  await db.navigation.delete({ where: { id: navigationId, storeId } });
+  await isAuthorized(storeId);
+
+  try {
+    await db.navigation.delete({ where: { id: navigationId, storeId } });
+  } catch (error) {
+    console.error(error);
+    return { error: true, message: 'Something went wrong, please try again' };
+  }
+
   revalidatePath('/', 'layout');
   redirect(`/dashboard/${storeId}/navigation`);
 }

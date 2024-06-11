@@ -2,13 +2,11 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { z } from 'zod';
 
 import isAuthorized from './_utils/isAuthorized';
-import db from '@/db/db';
+import db from '@/db';
 import { getSession } from '@/lib/auth';
-
-const storeSchema = z.object({ name: z.string().min(1) });
+import { storeSchema } from '@/zod/schemas/Store';
 
 export async function addStore(previousState: unknown, formData: FormData) {
   const session = await getSession();
@@ -17,16 +15,13 @@ export async function addStore(previousState: unknown, formData: FormData) {
   const data = Object.fromEntries(formData.entries());
   const result = storeSchema.safeParse(data);
 
-  if (!result.success) {
-    return result.error.formErrors.fieldErrors;
-  }
-
-  const { name } = result.data;
+  if (!result.success) return result.error.formErrors.fieldErrors;
 
   let store;
+
   try {
     store = await db.store.create({
-      data: { name, userId: session.user.id },
+      data: { ...result.data, userId: session.user.id },
     });
   } catch (error: unknown) {
     console.error(error);
@@ -37,74 +32,36 @@ export async function addStore(previousState: unknown, formData: FormData) {
   redirect(`/dashboard/${store.id}`);
 }
 
-const updateStoreSchema = z.object({
-  name: z.string().min(1),
-  logo: z.string().optional(),
-  description: z.string().optional(),
-  address: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().optional(),
-  facebook: z.string().optional(),
-  instagram: z.string().optional(),
-  twitter: z.string().optional(),
-});
-
-export async function updateStore(
-  storeId: string,
-  logo: string | undefined,
-  previousState: unknown,
-  formData: FormData
-) {
-  if (!(await isAuthorized(storeId)) || !storeId) redirect('/login');
-
+export async function updateStore(previousState: unknown, formData: FormData) {
   const data = Object.fromEntries(formData.entries());
-  const result = updateStoreSchema.safeParse(data);
+
+  const storeId = data.storeId as string;
+  await isAuthorized(storeId);
+
+  const result = storeSchema.safeParse(data);
 
   if (!result.success) return result.error.formErrors.fieldErrors;
 
-  const {
-    name,
-    description,
-    address,
-    phone,
-    email,
-    facebook,
-    instagram,
-    twitter,
-  } = result.data;
-
   try {
-    await db.store.update({
-      where: { id: storeId },
-      data: {
-        name,
-        logo,
-        description,
-        address,
-        phone,
-        email,
-        facebook,
-        instagram,
-        twitter,
-      },
-    });
+    await db.store.update({ where: { id: storeId }, data: result.data });
 
-    return {
-      success: true,
-      message: 'Store updated successfully',
-    };
+    return { success: true, message: 'Store updated successfully' };
   } catch (error) {
     console.error(error);
-    return {
-      error: true,
-      message: 'Error while trying to update the store',
-    };
+    return { error: true, message: 'Error while trying to update the store' };
   }
 }
 
 export async function deleteStore(storeId: string) {
-  if (!(await isAuthorized(storeId))) redirect('/login');
-  await db.store.delete({ where: { id: storeId } });
+  await isAuthorized(storeId);
+
+  try {
+    await db.store.delete({ where: { id: storeId } });
+  } catch (error) {
+    console.error(error);
+    return { message: 'Error while trying to delete the store' };
+  }
+
   revalidatePath('/', 'layout');
   redirect('/dashboard');
 }

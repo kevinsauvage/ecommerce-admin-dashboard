@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import Header from '@/components/Header';
 import LogoutButton from '@/components/LogoutButton';
 import MainNav from '@/components/MainNav';
-import db from '@/db/db';
+import db from '@/db';
 import { getSession } from '@/lib/auth';
 
 export default async function DashboardLayout({

@@ -88,7 +88,7 @@ model SEO {
   metaTitle       String  @default("")
   metaDescription String  @default("")
   metaKeywords    String  @default("")
-  product         Product @relation(fields: [productId], references: [id])
+  product         Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId       String  @unique
 
   createdAt DateTime @default(now())
@@ -185,7 +185,7 @@ model OrderItem {
   orderId   String // Foreign key to Order
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String // Foreign key to Product
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: NoAction)
   variantId String?
   variant   Variant? @relation(fields: [variantId], references: [id])
   quantity  Int

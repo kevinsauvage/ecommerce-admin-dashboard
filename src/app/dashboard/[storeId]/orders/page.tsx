@@ -2,7 +2,7 @@ import OrdersTable from './_components/OrdersTable';
 import BreadcrumbNav from '@/components/BreadcrumbNav';
 import Heading from '@/components/Heading';
 import NoData from '@/components/NoData';
-import db from '@/db/db';
+import db from '@/db';
 
 const getBreadcrumbItems = (storeId: string) => [
   { name: 'Dashboard', href: `/dashboard/${storeId}` },

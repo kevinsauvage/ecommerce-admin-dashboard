@@ -11,7 +11,7 @@ export default function FormErrorMessage({
     return (
       <div
         className={cn(
-          'text-red-500 text-sm mt-0 opacity-0 flex items-center gap-2 mb-4',
+          'text-red-500 text-sm mt-0 opacity-0 flex items-center gap-2 mb-2',
           message.length && 'opacity-100'
         )}
       >
@@ -29,7 +29,7 @@ export default function FormErrorMessage({
     message && (
       <div
         className={cn(
-          'text-red-500 text-sm mt-1 opacity-0 flex items-center gap-2 mb-4',
+          'text-red-500 text-sm mt-1 opacity-0 flex items-center gap-2 mb-2',
           message && 'opacity-100'
         )}
       >

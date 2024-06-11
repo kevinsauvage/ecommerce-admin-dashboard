@@ -2,85 +2,33 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { z } from 'zod';
 
 import isAuthorized from './_utils/isAuthorized';
-import { VariantInput } from '@/app/dashboard/[storeId]/products/_components/ProductForm';
-import db from '@/db/db';
+import db from '@/db';
+import { productSchema } from '@/zod/schemas/Product';
 
-const productSchema = z.object({
-  name: z.string().min(1, { message: 'Please enter a name' }),
-  slug: z.string().min(1, { message: 'Please enter a slug' }),
-  description: z.string().min(1, { message: 'Please enter a description' }),
-  price: z.coerce.number().min(1, { message: 'Please enter a price' }),
-  salePrice: z.coerce.number().optional(),
-  categories: z
-    .string()
-    .array()
-    .min(1, { message: 'Please select at least one category' }),
-  isFeatured: z.boolean().default(false).optional(),
-  isArchived: z.boolean().default(false).optional(),
-  stock: z.coerce.number().min(0).optional(),
-  images: z
-    .object({ url: z.string() })
-    .array()
-    .nonempty({ message: 'Please upload at least one image' }),
-  tags: z.string().array().optional(),
-  metaTitle: z.string().optional(),
-  metaDescription: z.string().optional(),
-  metaKeywords: z.string().optional(),
-  variants: z
-    .object({
-      stock: z.coerce.number().optional(),
-      options: z
-        .object({
-          optionId: z.string().min(1, {
-            message: 'Please select an option for all variants',
-          }),
-          valueId: z.string().min(1, {
-            message: 'Please select a value for all variants',
-          }),
-        })
-        .array()
-        .min(1, {
-          message:
-            'Please select at least one option for all variants or delete the unfinished variant',
-        }),
-    })
-    .array()
-    .optional(),
-});
+export async function addProduct(previousState: unknown, formData: FormData) {
+  const data = Object.fromEntries(formData.entries());
 
-export async function addProduct(
-  storeId: string,
-  productImages: Array<{ url: string }>,
-  tags: Array<string>,
-  variants: Array<VariantInput>,
-  categoriesIds: string[],
-  previousState: unknown,
-  formData: FormData
-) {
-  if (!(await isAuthorized(storeId))) redirect('/login');
+  const storeId = data.storeId as string;
+  await isAuthorized(storeId);
 
   const result = productSchema.safeParse({
     ...Object.fromEntries(formData.entries()),
     isFeatured: formData.get('isFeatured') === 'on',
     isArchived: formData.get('isArchived') === 'on',
-    categories: categoriesIds,
-    images: productImages,
-    tags,
-    variants,
   });
 
   if (!result.success) return result.error.formErrors.fieldErrors;
   const {
     stock,
     images,
-    variants: variantsData = [],
+    variants = [],
     metaDescription,
     metaKeywords,
     metaTitle,
     categories,
+    tags,
     ...rest
   } = result.data;
 
@@ -92,16 +40,15 @@ export async function addProduct(
         stock: stock || 0,
         images: { createMany: { data: images } },
         tags: {
-          connectOrCreate: tags.map((tag) => ({
+          connectOrCreate: tags?.map((tag) => ({
             where: { name: tag, storeId },
             create: { name: tag, storeId },
           })),
         },
         variants: {
           createMany: {
-            data: variantsData?.map((variant) => ({
+            data: variants?.map((variant) => ({
               stock: variant.stock || 0,
-              // Exclude the options field here
             })),
           },
         },
@@ -118,17 +65,14 @@ export async function addProduct(
       },
     });
 
-    // Step 2: Create or connect VariantOptionValue records for each created variant
     const createdVariants = await db.variant.findMany({
-      where: {
-        productId: product.id,
-      },
+      where: { productId: product.id },
     });
 
     await Promise.all(
       createdVariants.map((createdVariant, index) =>
         Promise.all(
-          variantsData[index].options.map((option) =>
+          variants[index].options.map((option) =>
             db.variantOptionValue.upsert({
               where: {
                 variantId_optionValueId: {
@@ -157,26 +101,18 @@ export async function addProduct(
 }
 
 export async function updateProduct(
-  storeId: string,
-  productId: string,
-  productImages: Array<{ url: string }>,
-  tags: Array<string>,
-  variants: Array<VariantInput>,
-  categoriesIds: string[],
   previousState: unknown,
   formData: FormData
 ) {
-  if (!(await isAuthorized(storeId))) redirect('/login');
-  if (!productId) redirect(`/dashboard/${storeId}/products`);
+  const data = Object.fromEntries(formData.entries());
+
+  const storeId = data.storeId as string;
+  await isAuthorized(storeId);
 
   const result = productSchema.safeParse({
-    ...Object.fromEntries(formData.entries()),
+    ...data,
     isFeatured: formData.get('isFeatured') === 'on',
     isArchived: formData.get('isArchived') === 'on',
-    images: productImages,
-    categories: categoriesIds,
-    tags,
-    variants,
   });
 
   if (!result.success) return result.error.formErrors.fieldErrors;
@@ -184,15 +120,18 @@ export async function updateProduct(
   const {
     stock,
     images,
-    variants: variantsData = [],
+    variants,
     metaDescription,
     metaKeywords,
     metaTitle,
     categories,
+    tags,
     ...rest
   } = result.data;
 
   try {
+    const productId = data.productId as string;
+
     await db.product.update({
       where: { id: productId, storeId },
       data: {
@@ -201,7 +140,7 @@ export async function updateProduct(
         images: { deleteMany: {}, createMany: { data: images } },
         tags: {
           deleteMany: {},
-          connectOrCreate: tags.map((tag) => ({
+          connectOrCreate: tags?.map((tag) => ({
             where: { name: tag, storeId },
             create: { name: tag, storeId },
           })),
@@ -209,7 +148,7 @@ export async function updateProduct(
         variants: {
           deleteMany: {},
           createMany: {
-            data: variantsData?.map((variant) => ({
+            data: variants?.map((variant) => ({
               stock: variant.stock || 0,
             })),
           },
@@ -234,17 +173,14 @@ export async function updateProduct(
       },
     });
 
-    // Step 2: Create or connect VariantOptionValue records for each created variant
     const createdVariants = await db.variant.findMany({
-      where: {
-        productId,
-      },
+      where: { productId },
     });
 
     await Promise.all(
       createdVariants.map((createdVariant, index) =>
         Promise.all(
-          variantsData[index].options.map((option) =>
+          variants[index].options.map((option) =>
             db.variantOptionValue.upsert({
               where: {
                 variantId_optionValueId: {
@@ -267,13 +203,21 @@ export async function updateProduct(
     console.error(error);
     return { message: 'Error while trying to update the product' };
   }
+
   revalidatePath('/', 'layout');
   redirect(`/dashboard/${storeId}/products`);
 }
 
 export async function deleteProduct(productId: string, storeId: string) {
-  if (!(await isAuthorized(storeId)) || !productId) redirect('/login');
-  await db.product.delete({ where: { id: productId } });
+  await isAuthorized(storeId);
+
+  try {
+    await db.product.delete({ where: { id: productId, storeId } });
+  } catch (error) {
+    console.error(error);
+    return { error: true, message: 'Error while trying to delete the product' };
+  }
+
   revalidatePath('/', 'layout');
   redirect(`/dashboard/${storeId}/products`);
 }

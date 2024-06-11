@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import db from '@/db/db';
+import db from '@/db';
 import { getSession } from '@/lib/auth';
 
 export default async function DashboardPage() {

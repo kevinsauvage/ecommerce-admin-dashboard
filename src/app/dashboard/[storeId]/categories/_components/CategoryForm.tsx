@@ -52,7 +52,7 @@ export default function CategoryForm({ category }: { category?: Category }) {
     <Form action={action}>
       <input type="hidden" name="storeId" value={storeId} />
       <input type="hidden" name="categoryId" value={category?.id} />
-      <input type="hidden" name="imageURL" value={category?.imageURL || ''} />
+      <input type="hidden" name="imageURL" value={categoryImage || ''} />
       <div className="grid grid-cols-1 gap-8">
         <Card>
           <CardHeader>
@@ -92,6 +92,7 @@ export default function CategoryForm({ category }: { category?: Category }) {
           </CardHeader>
           <CardContent>
             <ImageUpload
+              // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
               value={categoryImage ? [categoryImage] : []}
               onChange={(url) => setCategoryImage(url)}
               onRemove={() => setCategoryImage(undefined)}

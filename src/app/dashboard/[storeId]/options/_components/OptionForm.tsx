@@ -43,9 +43,7 @@ export default function OptionForm({
   const { toast } = useToast();
 
   const [error, action] = useFormState<Action, FormData>(
-    option
-      ? updateOption.bind(null, storeId, values, option.id)
-      : addOption.bind(null, storeId, values),
+    option ? updateOption : addOption,
     {}
   );
 
@@ -76,6 +74,9 @@ export default function OptionForm({
 
   return (
     <Form action={action}>
+      <input type="hidden" name="storeId" value={storeId} />
+      <input type="hidden" name="values" value={values} />
+      <input type="hidden" name="optionId" value={option?.id || ''} />
       <Card>
         <CardHeader>
           <CardTitle>Option Details</CardTitle>

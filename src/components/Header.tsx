@@ -15,7 +15,7 @@ import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import StoreSwitcher from '@/components/StoreSwitcher';
 import ToggleTheme from '@/components/ToggleTheme';
-import db from '@/db/db';
+import db from '@/db';
 import { getSession } from '@/lib/auth';
 
 export default async function Header() {

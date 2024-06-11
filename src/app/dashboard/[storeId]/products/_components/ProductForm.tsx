@@ -469,6 +469,7 @@ function InventorySelection({
 
 function CategorySelection({
   categories,
+  // eslint-disable-next-line react-perf/jsx-no-new-array-as-prop
   selectedCategories = [],
   setSelectedCategories,
   error,
@@ -646,35 +647,19 @@ export default function ProductForm({
     product?.categories || []
   );
   const { toast } = useToast();
-  const { storeId } = useParams() as { storeId: string };
+  const { storeId } = useParams();
 
-  const actionFn = product
-    ? updateProduct.bind(
-        null,
-        storeId,
-        product.id,
-        productImages,
-        tags,
-        variants,
-        selectedCategories.map((category) => category.id)
-      )
-    : addProduct.bind(
-        null,
-        storeId,
-        productImages,
-        tags,
-        variants,
-        selectedCategories.map((category) => category.id)
-      );
-
-  const [error, action] = useFormState<ActionResponse, FormData>(actionFn, {});
+  const [error, action] = useFormState<ActionResponse, FormData>(
+    product ? updateProduct : addProduct,
+    {}
+  );
 
   useEffect(() => {
     if (error?.message) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.error,
+        description: error.message,
       });
     } else if (error?.message === '') {
       window.scrollTo(0, 0);
@@ -683,6 +668,20 @@ export default function ProductForm({
 
   return (
     <Form action={action}>
+      <input type="hidden" name="storeId" value={storeId} />
+      <input type="hidden" name="productId" value={product?.id} />
+      <input
+        type="hidden"
+        name="images"
+        value={productImages.map((img) => img.url)}
+      />
+      <input type="hidden" name="tags" value={tags} />
+      <input type="hidden" name="variants" value={JSON.stringify(variants)} />
+      <input
+        type="hidden"
+        name="categories"
+        value={selectedCategories.map((category) => category.id)}
+      />
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="col-span-2 flex flex-col gap-8">
           <ProductInformationSelection product={product} error={error} />

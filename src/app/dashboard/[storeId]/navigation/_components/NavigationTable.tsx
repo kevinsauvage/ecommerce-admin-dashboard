@@ -39,7 +39,20 @@ export default function NavigationTable({
   const handleDelete = async () => {
     try {
       setLoading(true);
-      await deleteNavigation(idToDelete as string, storeId as string);
+      const response = await deleteNavigation(
+        idToDelete as string,
+        storeId as string
+      );
+
+      if (response?.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Oops! Something went wrong',
+          description: response.message,
+        });
+        return;
+      }
+
       setIdToDelete('');
       toast({
         variant: 'default',

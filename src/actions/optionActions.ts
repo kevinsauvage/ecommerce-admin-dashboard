@@ -2,33 +2,22 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { z } from 'zod';
 
 import isAuthorized from './_utils/isAuthorized';
-import db from '@/db/db';
+import db from '@/db';
 import capitalize from '@/utils/capitalize';
+import { optionSchema } from '@/zod/schemas/Option';
 
-const optionSchema = z.object({
-  name: z.string().min(1, { message: 'Please enter a name' }),
-  values: z
-    .array(z.string())
-    .nonempty({ message: 'Please enter at least one value' }),
-});
-
-export async function addOption(
-  storeId: string,
-  values: string[],
-  previousState: unknown,
-  formData: FormData
-) {
-  if (!(await isAuthorized(storeId))) redirect('/login');
-
+export async function addOption(previousState: unknown, formData: FormData) {
   const data = Object.fromEntries(formData.entries());
-  const result = optionSchema.safeParse({ ...data, values });
 
+  const storeId = data.storeId as string;
+  await isAuthorized(storeId);
+
+  const result = optionSchema.safeParse(data);
   if (!result.success) return result.error.formErrors.fieldErrors;
 
-  const { name } = result.data;
+  const { name, values } = result.data;
 
   try {
     await db.option.create({
@@ -51,22 +40,19 @@ export async function addOption(
   redirect(`/dashboard/${storeId}/options`);
 }
 
-export async function updateOption(
-  storeId: string,
-  values: string[],
-  optionId: string,
-  previousState: unknown,
-  formData: FormData
-) {
-  if (!(await isAuthorized(storeId))) redirect('/login');
+export async function updateOption(previousState: unknown, formData: FormData) {
+  const data = Object.fromEntries(formData.entries());
+
+  const storeId = data.storeId as string;
+  await isAuthorized(storeId);
+
+  const optionId = data.optionId as string;
   if (!optionId) redirect(`/dashboard/${storeId}/options`);
 
-  const data = Object.fromEntries(formData.entries());
-  const result = optionSchema.safeParse({ ...data, values });
-
+  const result = optionSchema.safeParse(data);
   if (!result.success) return result.error.formErrors.fieldErrors;
 
-  const { name } = result.data;
+  const { name, values } = result.data;
   try {
     await db.option.update({
       where: { id: optionId },
@@ -90,8 +76,17 @@ export async function updateOption(
 }
 
 export async function deleteOption(optionId: string, storeId: string) {
-  if (!(await isAuthorized(storeId)) || !optionId) redirect('/login');
-  await db.option.delete({ where: { id: optionId, storeId } });
+  await isAuthorized(storeId);
+
+  if (!optionId) redirect('/login');
+
+  try {
+    await db.option.delete({ where: { id: optionId, storeId } });
+  } catch (error) {
+    console.error(error);
+    return { error: true, message: 'Error while trying to delete the option' };
+  }
+
   revalidatePath('/', 'layout');
   redirect(`/dashboard/${storeId}/options`);
 }

@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 
-import db from './db';
+import db from '.';
 
 const sortMap = new Map([
   ['newest', { createdAt: Prisma.SortOrder.desc }],

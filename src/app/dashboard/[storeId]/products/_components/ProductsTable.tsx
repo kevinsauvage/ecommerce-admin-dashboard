@@ -55,7 +55,20 @@ export default function ProductsTable({
   const handleDelete = async () => {
     try {
       setLoading(true);
-      await deleteProduct(idToDelete as string, storeId as string);
+      const response = await deleteProduct(
+        idToDelete as string,
+        storeId as string
+      );
+
+      if (response?.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Error:',
+          description: response.message,
+        });
+        return;
+      }
+
       setIdToDelete('');
       toast({
         variant: 'default',
