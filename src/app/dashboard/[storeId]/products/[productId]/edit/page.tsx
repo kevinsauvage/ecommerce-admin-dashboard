@@ -12,8 +12,6 @@ const getData = async (productId: string, storeId: string) => {
     getProduct({
       storeId,
       productId,
-      withImages: true,
-      withVariants: true,
       withTags: true,
       withCategories: true,
       withSeo: true,

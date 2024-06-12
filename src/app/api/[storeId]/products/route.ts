@@ -3,18 +3,23 @@ import { NextResponse } from 'next/server';
 import { getProducts } from '@/db/products';
 
 const getQueryParams = (searchParams: URLSearchParams) => {
-  const page = Number(searchParams.get('page'));
-  const pageSize = Number(searchParams.get('pageSize'));
-
+  const page = Number(searchParams.get('page') || 1);
+  const pageSize = Number(searchParams.get('pageSize') || 10);
   const query = searchParams.get('query') || '';
   const sort = searchParams.get('sort') || 'newest';
   const filter = searchParams.get('filter') || '';
+  const categoryIds = searchParams.get('categoryIds') || undefined;
 
-  const withVariants = searchParams.get('withVariants') === 'true';
   const withTags = searchParams.get('withTags') === 'true';
   const withCategories = searchParams.get('withCategories') === 'true';
   const withSeo = searchParams.get('withSeo') === 'true';
-  const withImages = searchParams.get('withImages') === 'true';
+
+  const isArchived = searchParams.has('isArchived')
+    ? searchParams.get('isArchived') === 'true'
+    : undefined;
+  const isFeatured = searchParams.has('isFeatured')
+    ? searchParams.get('isFeatured') === 'true'
+    : undefined;
 
   return {
     page,
@@ -22,11 +27,12 @@ const getQueryParams = (searchParams: URLSearchParams) => {
     query,
     sort,
     filter,
-    withVariants,
     withTags,
     withCategories,
     withSeo,
-    withImages,
+    categoryIds,
+    isArchived,
+    isFeatured,
   };
 };
 
@@ -42,15 +48,13 @@ export async function GET(
       pageSize,
       query,
       sort,
-      filter,
+      isArchived,
+      isFeatured,
       withTags,
       withCategories,
-      withVariants,
       withSeo,
-      withImages,
+      categoryIds,
     } = getQueryParams(searchParams);
-
-    const selectedFilters = filter?.split(',');
 
     const { products, count } = await getProducts({
       storeId,
@@ -58,13 +62,12 @@ export async function GET(
       pageSize,
       query,
       sort,
-      isArchived: selectedFilters?.includes('archived'),
-      isFeatured: selectedFilters?.includes('featured'),
-      withImages,
-      withVariants,
+      isArchived,
+      isFeatured,
       withTags,
       withCategories,
       withSeo,
+      categoryIds: categoryIds ? categoryIds.split(',') : undefined,
     });
 
     return NextResponse.json({ products, count });

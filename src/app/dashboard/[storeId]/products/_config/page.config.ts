@@ -40,8 +40,3 @@ export const sortOptions = [
     sort: { name: Prisma.SortOrder.desc },
   },
 ];
-
-export const filterOptions = [
-  { key: 'archived', label: 'Archived' },
-  { key: 'featured', label: 'Featured' },
-];

@@ -84,6 +84,7 @@ export default function CategoriesTable({
           <TableRow>
             <TableHead className="hidden sm:table-cell">Image</TableHead>
             <TableHead>Name</TableHead>
+
             <TableHead>Created At</TableHead>
             <TableHead className="text-end">
               <span className="sr-only">Actions</span>

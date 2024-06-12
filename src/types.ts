@@ -32,3 +32,22 @@ export interface Navigation {
   slug: string;
   items: NavigationItem[];
 }
+
+export type ProductWithRelation = Prisma.ProductGetPayload<{
+  include: {
+    categories: true;
+    variants: {
+      include: {
+        options: {
+          include: {
+            optionValue: true;
+            option: true;
+          };
+        };
+      };
+    };
+    images: true;
+    tags: true;
+    seo: true;
+  };
+}>;

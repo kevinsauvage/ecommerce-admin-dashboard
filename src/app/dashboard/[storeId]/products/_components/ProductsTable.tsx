@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  Category,
-  Image as PrismaImage,
-  Product,
-  Variant,
-} from '@prisma/client';
+import { Category } from '@prisma/client';
 import { MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -34,18 +29,12 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
 import { formatCurrency } from '@/lib/formatters';
+import { ProductWithRelation } from '@/types';
 
 export default function ProductsTable({
   products = [],
 }: {
-  products: Array<
-    Product & {
-      category: Category;
-      variants: Array<Variant>;
-      images: Array<PrismaImage>;
-      tags: Array<string>;
-    }
-  >;
+  products: Array<ProductWithRelation>;
 }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState<boolean>(false);
@@ -102,6 +91,7 @@ export default function ProductsTable({
             </TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead className="hidden md:table-cell">Categories</TableHead>
             <TableHead className="hidden md:table-cell">Price</TableHead>
             <TableHead className="hidden md:table-cell">Stock</TableHead>
             <TableHead className="hidden md:table-cell">Created at</TableHead>
@@ -133,6 +123,15 @@ export default function ProductsTable({
                       Featured
                     </Badge>
                   )}
+                </div>
+              </TableCell>
+              <TableCell className="hidden md:table-cell">
+                <div className="flex gap-1">
+                  {product.categories?.map((category: Category) => (
+                    <Badge key={category.id} className="w-fit">
+                      {category.name}
+                    </Badge>
+                  ))}
                 </div>
               </TableCell>
               <TableCell className="hidden md:table-cell">

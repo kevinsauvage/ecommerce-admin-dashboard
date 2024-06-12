@@ -19,5 +19,10 @@ export const NavigationArraySchema = z.array(navigationItemSchema);
 
 export const NavigationSchema = z.object({
   name: z.string().min(1, { message: 'Name is required' }),
-  slug: z.string().min(1, { message: 'Slug is required' }),
+  slug: z
+    .string()
+    .min(1, { message: 'Slug is required' })
+    .regex(/^[a-zA-Z]+(-[a-zA-Z]+)*$/, {
+      message: 'Slug is in a wrong format',
+    }),
 });

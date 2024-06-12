@@ -17,12 +17,11 @@ type GetProductsParams = {
   storeId: string;
   sort?: string;
   query?: string;
+  categoryIds?: string[];
   page?: number;
   pageSize?: number;
-  isArchived?: boolean;
-  isFeatured?: boolean;
-  withImages?: boolean;
-  withVariants?: boolean;
+  isArchived?: boolean | undefined;
+  isFeatured?: boolean | undefined;
   withTags?: boolean;
   withCategories?: boolean;
   withSeo?: boolean;
@@ -35,48 +34,56 @@ export const getProducts = async (params: GetProductsParams) => {
     pageSize = 10,
     query = '',
     sort = 'newest',
-    isArchived = undefined,
-    isFeatured = undefined,
+    isArchived,
+    isFeatured,
     withCategories = false,
-    withImages = false,
-    withVariants = false,
     withTags = false,
     withSeo = false,
+    categoryIds = undefined,
   } = params || {};
 
-  const OR = [{ isArchived }, { isFeatured }].filter((condition) =>
-    Object.values(condition).some((value) => value !== undefined)
-  );
+  const AND: Prisma.ProductWhereInput[] = [];
+  const OR: Prisma.ProductWhereInput[] = [];
 
-  const AND = [
-    { name: { contains: query, mode: Prisma.QueryMode.insensitive } },
-  ].filter((condition) =>
-    Object.values(condition).some((value) => value !== undefined)
-  );
+  if (query) {
+    AND.push({ name: { contains: query, mode: Prisma.QueryMode.insensitive } });
+  }
+
+  if (categoryIds?.length) {
+    categoryIds.forEach((categoryId) => {
+      OR.push({ categories: { some: { id: categoryId } } });
+    });
+  }
+
+  if (isArchived !== undefined) {
+    AND.push({ isArchived });
+  }
+
+  if (isFeatured !== undefined) {
+    AND.push({ isFeatured });
+  }
 
   const where = {
     storeId,
-    OR: OR.length ? OR : undefined,
     AND: AND.length ? AND : undefined,
+    OR: OR.length ? OR : undefined,
   };
 
   const include = {
     categories: withCategories,
-    variants: withVariants
-      ? {
+    variants: {
+      include: {
+        options: {
           include: {
-            options: {
-              include: {
-                optionValue: true,
-                option: true,
-              },
-            },
+            optionValue: true,
+            option: true,
           },
-        }
-      : undefined,
-    images: withImages,
+        },
+      },
+    },
     tags: withTags,
     seo: withSeo,
+    images: true,
   };
 
   const [products, count] = await Promise.all([
@@ -98,8 +105,6 @@ type GetProductParams = {
   productId: string;
   isFeatured?: boolean;
   isArchived?: boolean;
-  withImages?: boolean;
-  withVariants?: boolean;
   withTags?: boolean;
   withCategories?: boolean;
   withSeo?: boolean;
@@ -112,8 +117,6 @@ export const getProduct = async (params: GetProductParams) => {
     isFeatured,
     isArchived,
     withCategories = false,
-    withImages = false,
-    withVariants = false,
     withTags = false,
     withSeo = false,
   } = params || {};
@@ -127,19 +130,17 @@ export const getProduct = async (params: GetProductParams) => {
 
   const include = {
     categories: withCategories,
-    variants: withVariants
-      ? {
+    variants: {
+      include: {
+        options: {
           include: {
-            options: {
-              include: {
-                optionValue: true,
-                option: true,
-              },
-            },
+            optionValue: true,
+            option: true,
           },
-        }
-      : undefined,
-    images: withImages,
+        },
+      },
+    },
+    images: true,
     tags: withTags,
     seo: withSeo,
   };

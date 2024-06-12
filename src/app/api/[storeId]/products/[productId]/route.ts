@@ -10,23 +10,25 @@ export async function GET(
     const { storeId, productId } = params || {};
     const { searchParams } = new URL(req.url);
 
-    const isFeatured = searchParams.get('isFeatured') === 'true';
-    const isArchived = searchParams.get('isArchived') === 'true';
-    const withVariants = searchParams.get('withVariants') === 'true';
+    const isArchived = searchParams.has('isArchived')
+      ? searchParams.get('isArchived') === 'true'
+      : undefined;
+    const isFeatured = searchParams.has('isFeatured')
+      ? searchParams.get('isFeatured') === 'true'
+      : undefined;
+
     const withTags = searchParams.get('withTags') === 'true';
     const withCategories = searchParams.get('withCategories') === 'true';
     const withSeo = searchParams.get('withSeo') === 'true';
 
-    const product = getProduct({
+    const product = await getProduct({
       storeId,
       productId,
       isFeatured,
       isArchived,
-      withImages: true,
       withTags,
       withCategories,
       withSeo,
-      withVariants,
     });
 
     return NextResponse.json(product);
