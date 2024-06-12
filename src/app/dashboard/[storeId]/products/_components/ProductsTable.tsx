@@ -126,7 +126,7 @@ export default function ProductsTable({
                 </div>
               </TableCell>
               <TableCell className="hidden md:table-cell">
-                <div className="flex gap-1">
+                <div className="flex gap-1 flex-wrap">
                   {product.categories?.map((category: Category) => (
                     <Badge key={category.id} className="w-fit">
                       {category.name}

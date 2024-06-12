@@ -55,13 +55,8 @@ export const getProducts = async (params: GetProductsParams) => {
     });
   }
 
-  if (isArchived !== undefined) {
-    AND.push({ isArchived });
-  }
-
-  if (isFeatured !== undefined) {
-    AND.push({ isFeatured });
-  }
+  if (isArchived !== undefined) OR.push({ isArchived });
+  if (isFeatured !== undefined) OR.push({ isFeatured });
 
   const where = {
     storeId,
